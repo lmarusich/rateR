@@ -20,24 +20,6 @@ dataImport <- function(id){
           return(input$textFile)
         } 
         
-        # else {
-        #   if(input$sampleData) {
-        #     if (input$whichsampleData == 'bland1995'){
-        #       return(list('name' = 'bland1995.csv',
-        #                   'datapath' = 'bland1995.csv'))
-        #     } else if (input$whichsampleData == 'gilden2010'){
-        #       return(list('name' = 'gilden2010.csv',
-        #                   'datapath' = 'gilden2010.csv'))
-        #     } else if (input$whichsampleData == 'marusich2016'){
-        #       return(list('name' = 'marusich2016_exp2.csv',
-        #                   'datapath' = 'marusich2016_exp2.csv'))
-        #     } else if (input$whichsampleData == 'raz2005'){
-        #       return(list('name' = 'raz2005.csv',
-        #                   'datapath' = 'raz2005.csv'))
-        #     }
-        #   }
-        #   req(input$excelFile)
-        # }
       })
       datapath <- reactive({
         userFile()$datapath
@@ -52,7 +34,8 @@ dataImport <- function(id){
           check.names = TRUE,
           dec = input$decimalPoint
         )
-        cbind(rowNumber = 1:dim(filedat)[1], filedat)
+        return(filedat)
+        # cbind(rowNumber = 1:dim(filedat)[1], filedat)
       })
       
       

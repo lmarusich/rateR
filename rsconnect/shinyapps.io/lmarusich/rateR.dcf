@@ -5,9 +5,9 @@ account: lmarusich
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6250071
-bundleId: 5878844
+bundleId: 5895649
 url: https://lmarusich.shinyapps.io/rateR/
-when: 1651861718.81068
-lastSyncTime: 1651861718.81068
+when: 1652282975.30214
+lastSyncTime: 1652282975.30214
 asMultiple: FALSE
 asStatic: FALSE

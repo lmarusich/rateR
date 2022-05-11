@@ -44,65 +44,9 @@ ratingOptions <- function(id, data){
 
         ))
       })
-      # return(generatedUI)
-
-      # # The selected file, if any
-      # userFile <- reactive({
-      #   # If no file is selected, don't do anything
-      #   # validate(need(input$excelFile, message = FALSE))
-      #   # return(input$excelFile)
-      #   if (!is.null(input$textFile)){
-      #     return(input$textFile)
-      #   }
-      #
-      # })
-      # datapath <- reactive({
-      #   userFile()$datapath
-      # })
-      #
-      # inputData <- reactive({
-      #   filedat <- read.delim2(
-      #     userFile()$datapath,
-      #     # header = input$header,
-      #     sep = ",",
-      #     # quote = input$quote,
-      #     check.names = TRUE,
-      #     # dec = input$decimalPoint
-      #   )
-      #   cbind(rowNumber = 1:dim(filedat)[1], filedat)
-      # })
-      #
-      #
-      #
-      # conditions <- reactive({
-      #   colnames(inputData())
-      # })
-      #
-      # name <- reactive({
-      #   userFile()$name
-      # })
 
 
-#       code <- reactive({
-#         quoteCode <- ifelse(input$quote == '\'', '"{input$quote}"', '\'{input$quote}\'')
-#         sepCode <- ifelse(input$sep == '\t', '\\t', '{input$sep}')
-#         glue('## Load the data
-# inputData <- read.delim2("{name()}",
-#                           header = {input$header},
-#                           sep = \'', sepCode, '\',
-#                           quote = ', quoteCode, ',
-#                           check.names = TRUE,
-#                           dec = \'{input$decimalPoint}\')\n\n')})
 
-
-      #
-      # return(list(
-      #   inputData = inputData,
-      #   conditions = conditions,
-      #   name = name,
-      #   # code = code,
-      #   datapath = datapath
-      # ))
     }
   )
 }
