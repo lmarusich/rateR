@@ -13,17 +13,37 @@ dataImportUI <- function(id, label = "Import Method:") {
     ),
     conditionalPanel(
       condition = "input.importOptions == 'upload'",
-      ns = ns,
-      p("Upload a .txt or .csv file with one item per row."),
-      fileInput(ns("textFile"),
-                label = "File Input",
-                multiple = FALSE,
-                accept = c("text/csv",
-                           "text/comma-separated-values,text/plain",
-                           ".csv"),
-                buttonLabel = "Browse...", #Unnecessary line, it's the default
-                placeholder = "No file selected")
+      ns=ns,
+      uiOutput(ns("textFile"))
+      # ns = ns,
+      # p("Upload a .txt, .csv, or .xlsx file with one item per row."),
+      # fileInput(ns("textFile"),
+      #           label = "File Input",
+      #           multiple = FALSE,
+      #           accept = c("text/csv",
+      #                      "text/comma-separated-values,text/plain",
+      #                      ".csv",
+      #                      ".xls",
+      #                      ".xlsx"),
+      #           buttonLabel = "Browse...", #Unnecessary line, it's the default
+      #           placeholder = "No file selected")
     ),
+    uiOutput(ns("sheets")),
+    # conditionalPanel(
+    #   condition = "output.sheets != NULL",
+    #   ns = ns,
+    #   p("HI"),
+      # fileInput(ns("textFile"),
+      #           label = "File Input",
+      #           multiple = FALSE,
+      #           accept = c("text/csv",
+      #                      "text/comma-separated-values,text/plain",
+      #                      ".csv",
+      #                      ".xls",
+      #                      ".xlsx"),
+      #           buttonLabel = "Browse...", #Unnecessary line, it's the default
+      #           placeholder = "No file selected")
+    # ),
     conditionalPanel(
       condition = "input.importOptions == 'googlesheet'",
       ns = ns,

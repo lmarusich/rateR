@@ -86,7 +86,6 @@ server <- function(input, output, session) {
   #show preview table on first page (no interaction)
   output$preview1 <- DT::renderDataTable({
     main_preview_table()
-
   })
   
   #show preview table on second page (highlight selected column)
