@@ -48,6 +48,15 @@ ratingOptions <- function(id, data){
 
         ))
       })
+      
+      # return(list(
+      #   selectedColumn = reactive(input$selectedColumn),
+      #   ratingName = reactive(ratingName),
+      #   ratingType = reactive(ratingType),
+      #   minNumRating = reactive(minNumRating),
+      #   minNumRating = reactive(minNumRating),
+      #   ratingLabels = reactive(ratingLabels)
+      # ))
 
 
 

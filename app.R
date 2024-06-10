@@ -48,7 +48,7 @@ ui <- fluidPage(
               ),
               tabPanel(
                 title = "Rate!",
-                DT::dataTableOutput('mainDT'),
+                DT::dataTableOutput('mainDT')
                 # modalUI("test")
               ),
               tabPanel(
@@ -70,17 +70,37 @@ server <- function(input, output, session) {
   observeEvent(inputData$name(),{
     enable('import_done')
     ratingOptions(id = "options_ui", data = inputData)
+    # browser()
+  })
+  
+  ratingSpecs <- reactive({
+    req(input$ratingType)
+    req(input$selectedColumn)
+    req(input$ratingName)
+    return(list(
+      selectedColumn = (input$selectedColumn),
+      ratingName = (input$ratingName),
+      ratingType = (input$ratingType),
+      specified = input$specifyRatings,
+      minNumRating = (input$minNumRating),
+      maxNumRating = (input$maxNumRating),
+      ratingLabels = (input$ratingLabels)
+    ))
   })
   
   #call rating modal module
   observeEvent(input$mainDT_rows_selected,{
     # req(input$mainDT_rows_selected)
+    # browser()
     modal(id = "test", 
-          data = modified_data(), 
-          reactive(input$selectedColumn),
+          data = modified_data(),
           reactive(input$mainDT_rows_selected),
-          reactive(input$ratingType),
-          reactive(input$specifyRatings))
+          ratingSpecs = ratingSpecs())
+          # reactive(input$selectedColumn),
+          # reactive(input$mainDT_rows_selected),
+          # reactive(input$ratingName),
+          # reactive(input$ratingType),
+          # reactive(input$specifyRatings))
   })
   
   #generate preview table of data
@@ -136,10 +156,14 @@ server <- function(input, output, session) {
   #if user hits "next" on import tab, move to options tab
   observeEvent(input$import_done, {
     updateTabsetPanel(session, inputId = 'tabs', selected = "Ratings Options")
+    # ratingSpecs <- ratingOptions(id = "options_ui", data = inputData)
+    
   })
   
   #if user hits "next" on options tab, move to rating tab
   observeEvent(input$options_done, {
+    # ratingSpecs <- ratingOptions(id = "options_ui", data = inputData)
+    
     updateTabsetPanel(session, inputId = 'tabs', selected = "Rate!")
   })
   
