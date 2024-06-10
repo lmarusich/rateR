@@ -14,36 +14,19 @@ dataImportUI <- function(id, label = "Import Method:") {
     conditionalPanel(
       condition = "input.importOptions == 'upload'",
       ns=ns,
-      uiOutput(ns("textFile"))
-      # ns = ns,
-      # p("Upload a .txt, .csv, or .xlsx file with one item per row."),
-      # fileInput(ns("textFile"),
-      #           label = "File Input",
-      #           multiple = FALSE,
-      #           accept = c("text/csv",
-      #                      "text/comma-separated-values,text/plain",
-      #                      ".csv",
-      #                      ".xls",
-      #                      ".xlsx"),
-      #           buttonLabel = "Browse...", #Unnecessary line, it's the default
-      #           placeholder = "No file selected")
+      p("Upload a .txt, .csv, or .xlsx file with one item per row."),
+      fileInput(ns("textFile"),
+                label = "File Input",
+                multiple = FALSE,
+                accept = c("text/csv",
+                           "text/comma-separated-values,text/plain",
+                           ".csv",
+                           ".xls",
+                           ".xlsx"),
+                buttonLabel = "Browse...", #Unnecessary line, it's the default
+                placeholder = "No file selected")
     ),
     uiOutput(ns("sheets")),
-    # conditionalPanel(
-    #   condition = "output.sheets != NULL",
-    #   ns = ns,
-    #   p("HI"),
-      # fileInput(ns("textFile"),
-      #           label = "File Input",
-      #           multiple = FALSE,
-      #           accept = c("text/csv",
-      #                      "text/comma-separated-values,text/plain",
-      #                      ".csv",
-      #                      ".xls",
-      #                      ".xlsx"),
-      #           buttonLabel = "Browse...", #Unnecessary line, it's the default
-      #           placeholder = "No file selected")
-    # ),
     conditionalPanel(
       condition = "input.importOptions == 'googlesheet'",
       ns = ns,
@@ -52,7 +35,7 @@ dataImportUI <- function(id, label = "Import Method:") {
     ),
     p("If the preview doesn't appear correctly on the right, click below."),
     tags$details(
-      tags$summary("Data options"),
+      tags$summary("Data options", style = "display:revert;"),
       checkboxInput(ns("header"), "Header", TRUE),
       radioButtons(ns("sep"), "Column Delimiter",
                    choices = c(Comma = ",",

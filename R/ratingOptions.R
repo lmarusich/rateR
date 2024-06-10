@@ -17,10 +17,14 @@ ratingOptions <- function(id, data){
         # req(data$name()) #conditions are the column names
         tagList(
           selectInput('selectedColumn',
-                      label = 'Select the column containing items to be rated:',
+                      label = 'Select the column containing items to be labeled/rated:',
                       choices = c("",data$columns()),
                       selected = NULL,
                       multiple = FALSE),
+          textInput('ratingName',
+                    label = 'Name the new column of labels/ratings:',
+                    value = "",
+                    placeholder = "new column name"),
           selectInput('ratingType',
                       label = 'Type of ratings:',
                       choices = c("","labels","numbers"),

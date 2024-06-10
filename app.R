@@ -1,3 +1,12 @@
+# ToDo Items:
+# - look into custom URLs
+# - enforce rating specifications
+# - add ratings to data preview
+# - add output/saving functionality
+# - functionality for multiple ratings per item?
+# - in modular window, add something to display which row they're on
+# - in rating tab, can we limit the clicking to the specific column?
+# - in rating tab, add instructions like "click an item to rate it"
 library(shiny)
 library(shinyjs)
 
@@ -69,7 +78,9 @@ server <- function(input, output, session) {
     modal(id = "test", 
           data = modified_data(), 
           reactive(input$selectedColumn),
-          reactive(input$mainDT_rows_selected))
+          reactive(input$mainDT_rows_selected),
+          reactive(input$ratingType),
+          reactive(input$specifyRatings))
   })
   
   #generate preview table of data
@@ -99,9 +110,10 @@ server <- function(input, output, session) {
   #call addColumns function to add rownumber column and ratings/notes columns to data
   modified_data <- reactive({
     req(inputData$name())
+    # browser()
     req(input$selectedColumn)
     req(input$ratingType)
-    addColumns(inputData$inputData())
+    addColumns(inputData$inputData(), input$ratingName, input$selectedColumn)
   })
   
   #show new data on third tab
@@ -117,6 +129,7 @@ server <- function(input, output, session) {
     input$ratingType
     req(input$selectedColumn)
     req(input$ratingType)
+    req(input$ratingName)
     enable("options_done")
   })
 
