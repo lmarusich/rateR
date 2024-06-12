@@ -23,7 +23,7 @@ ui <- fluidPage(
                     dataImportUI("import_ui", label = "Import Method:"),
                     br(),
                     disabled(actionButton("import_done",
-                                 label = "Next"))
+                                          label = "Next"))
                   ),
                   mainPanel(
                     h4('Data Preview:'),
@@ -62,15 +62,28 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
+  initialdf <- reactiveValues(df_data = NULL)
+  newdf <- reactiveValues(df_data = NULL)
+  
+  # observeEvent(input$file, {
+  #   values$df_data <- read.csv(input$file$datapath)
+  # })
+  # 
+  # observeEvent(input$Go, {
+  #   temp <- values$df_data[-input$Delete, ]
+  #   values$df_data <- temp
+  #   
+  # })
+  
   #call data import module
   inputData <- dataImport(id = "import_ui")
   
   #if user has imported data, 
   #enable "next" button, and call rating options module
   observeEvent(inputData$name(),{
+    initialdf$df_data <- inputData$inputData()
     enable('import_done')
     ratingOptions(id = "options_ui", data = inputData)
-    # browser()
   })
   
   ratingSpecs <- reactive({
@@ -89,20 +102,54 @@ server <- function(input, output, session) {
   })
   
   #call rating modal module
-  observeEvent(input$mainDT_rows_selected,{
+  # observeEvent(input$mainDT_rows_selected,{
+  observe(
+    input$mainDT_rows_selected,
+    req(initialdf$df_data),
+  
     # req(input$mainDT_rows_selected)
     # browser()
-    modal(id = "test", 
-          data = modified_data(),
-          reactive(input$mainDT_rows_selected),
-          ratingSpecs = ratingSpecs())
-          # reactive(input$selectedColumn),
-          # reactive(input$mainDT_rows_selected),
-          # reactive(input$ratingName),
-          # reactive(input$ratingType),
-          # reactive(input$specifyRatings))
+    newdf$df_data <- modal(
+      input,
+                data = initialdf$df_data,
+                reactive(input$mainDT_rows_selected),
+                ratingSpecs = ratingSpecs())
+  )
+    # temp <- initialdf$df_data
+    # browser()
+    # temp[[input$ratingName]] <- newdf()$rating
+    # browser()
+  # })
+  
+  
+  
+  observeEvent(input$next_button, {
+    browser() #update newdf inside the modal function?
+    selectRows(DT_proxy, selected = input$mainDT_rows_selected + 1) # selects the row of the next index
   })
   
+  # latestRating <- reactive({
+  #   newdf()
+  #   browser()
+  # })
+  # 
+  # observe({
+  #   newdf()
+  #   browser()
+  # })
+  
+  # #if user has entered a rating
+  # #do something?
+  # observeEvent(input$`test-inputRating`,{
+  #   # enable('import_done')
+  #   # ratingOptions(id = "options_ui", data = inputData)
+  #   req(input$`test-inputRating`)
+  #   # browser()
+  # })
+  
+  # observeEvent(input$test-close_button,{
+  #     browser()
+  #   })
   #generate preview table of data
   main_preview_table <- reactive({
     req(inputData$name())
@@ -111,7 +158,7 @@ server <- function(input, output, session) {
       rownames = F,
       selection = 'none',
       options = list(dom = 'tp', ordering = F)
-      )
+    )
   })
   
   #show preview table on first page (no interaction)
@@ -126,22 +173,51 @@ server <- function(input, output, session) {
       background = 'yellow'
     )
   })
-
+  
   #call addColumns function to add rownumber column and ratings/notes columns to data
-  modified_data <- reactive({
-    req(inputData$name())
-    # browser()
+  # modified_data <- reactive({
+  observe({
+    input$selectedColumn
+    input$ratingType
+    input$ratingName
     req(input$selectedColumn)
     req(input$ratingType)
-    addColumns(inputData$inputData(), input$ratingName, input$selectedColumn)
+    req(input$ratingName)
+    # browser()
+    temp <- addColumns(initialdf$df_data, input$ratingName, input$selectedColumn)
+    initialdf$df_data <- temp
+    
   })
+  #   req(inputData$name())
+  #   # browser()
+  #   req(input$selectedColumn)
+  #   req(input$ratingType)
+  #   # browser()
+  #   addColumns(inputData$inputData(), input$ratingName, input$selectedColumn)
+  #   
+  #   # req(newdf())
+  #   # browser()
+  #   # if (req(df)){
+  #   #   browser()
+  #   # }
+  #   
+  # })
+  
+  # rated_data <- reactive({
+  #   browser()
+  #   req(df)
+  #   browser()
+  # })
   
   #show new data on third tab
   output$mainDT <- DT::renderDataTable(
-    modified_data(),
+    # modified_data(),
+    initialdf$df_data,
     selection = 'single',
     rownames = F
   )
+  
+  DT_proxy <- dataTableProxy("mainDT")
   
   #if user selects a column and chooses a type of rating, enable "next" button
   observe({
@@ -152,7 +228,7 @@ server <- function(input, output, session) {
     req(input$ratingName)
     enable("options_done")
   })
-
+  
   #if user hits "next" on import tab, move to options tab
   observeEvent(input$import_done, {
     updateTabsetPanel(session, inputId = 'tabs', selected = "Ratings Options")
