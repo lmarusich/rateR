@@ -77,7 +77,6 @@ server <- function(input, output, session) {
   #enable "next" button, and call rating options module
   observe({
     inputData$name()
-    # browser()
     req(inputData$imported())
     initialdf$df_data <- inputData$inputData()
     enable('import_done')
@@ -95,7 +94,7 @@ server <- function(input, output, session) {
       specified = input$specifyRatings,
       minNumRating = (input$minNumRating),
       maxNumRating = (input$maxNumRating),
-      ratingLabels = (input$ratingLabels)
+      ratingLabels = unlist(strsplit(input$ratingLabels, split = "\n"))
     ))
   })
   
@@ -116,6 +115,20 @@ server <- function(input, output, session) {
     #enforcing the rating/label type
     if (ratingSpecs()$ratingType == "labels"){
       #check that the label is in the list
+      if (ratingSpecs()$specified) {
+        if (!(input$inputRating %in% ratingSpecs()$ratingLabels)){
+          validInput = F
+          showModal(myModal(initialdf, 
+                            ratingSpecs()$selectedColumn,
+                            input$mainDT_rows_selected, 
+                            ratingSpecs()$ratingName, 
+                            failed = TRUE, 
+                            failMsg = paste0("Please enter one of the following labels: ",
+                                             paste(ratingSpecs()$ratingLabels, collapse = ', '))))
+          
+        }
+      }
+      
     } else if (ratingSpecs()$ratingType == "numbers"){
       #first check that it's a number - if not, throw an error
       if (is.na(as.numeric(input$inputRating))){
@@ -124,8 +137,8 @@ server <- function(input, output, session) {
         
         #then check if min/max was specified, and if so, if their rating is in that range
       } else if (ratingSpecs()$specified){
-        if ((input$inputRating < ratingSpecs()$minNumRating) |
-            (input$inputRating > ratingSpecs()$maxNumRating)){
+        if ((as.numeric(input$inputRating) < ratingSpecs()$minNumRating) |
+            (as.numeric(input$inputRating) > ratingSpecs()$maxNumRating)){
           #throw an error
           validInput = F
           showModal(myModal(initialdf, ratingSpecs()$selectedColumn,input$mainDT_rows_selected,
@@ -136,24 +149,25 @@ server <- function(input, output, session) {
                                              " and ",
                                              ratingSpecs()$maxNumRating)))
         }
-      }
-      
-      if (validInput){
-        #save the rating
-        ratings$ratings[[input$mainDT_rows_selected]] <- input$inputRating
         
-        #if they hit the next button, select the next row
-        if (input$next_button){
-          #go to next row
-          selectRows(DT_proxy, selected = input$mainDT_rows_selected + 1) # selects the row of the next index
-        }
-        
-        #if they hit the save/close button, close the modal window
-        if (input$close_button){
-          removeModal()
-        }
       }
     }
+    if (validInput){
+      #save the rating
+      ratings$ratings[[input$mainDT_rows_selected]] <- input$inputRating
+      
+      #if they hit the next button, select the next row
+      if (input$next_button){
+        #go to next row
+        selectRows(DT_proxy, selected = input$mainDT_rows_selected + 1) # selects the row of the next index
+      }
+      
+      #if they hit the save/close button, close the modal window
+      if (input$close_button){
+        removeModal()
+      }
+    }
+    
   })
   
   #generate preview table of data
@@ -189,7 +203,7 @@ server <- function(input, output, session) {
     req(input$selectedColumn)
     req(input$ratingType)
     req(input$ratingName)
-
+    
     temp <- addColumns(initialdf$df_data, input$ratingName, input$selectedColumn, ratings$ratings, input$ratingType)
     initialdf$df_data <- temp
   })
@@ -230,9 +244,9 @@ server <- function(input, output, session) {
       selectInput("downloadFormat",
                   label = "File format",
                   choices = list(
-                      "csv" = ".csv",
-                      "txt" = ".txt"
-                    ),
+                    "csv" = ".csv",
+                    "txt" = ".txt"
+                  ),
                   selected = NULL),
       downloadButton("downloadData",
                      label = "Download Data")
@@ -243,7 +257,7 @@ server <- function(input, output, session) {
   output$downloadData <- downloadHandler(
     filename = function(){
       paste0(inputData$name(), "-rated", input$downloadFormat)
-      },
+    },
     content = function(file) {
       if(input$downloadFormat == '.csv') {
         write.csv(initialdf$df_data, file, row.names = F)
