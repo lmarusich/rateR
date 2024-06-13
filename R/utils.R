@@ -1,6 +1,8 @@
 library(dplyr)
 
-addColumns <- function(data, newcolName, ratedColumn){
+addColumns <- function(data, newcolName, ratedColumn, ratings){
+  
+  ratings <- unlist(ratings)
   
   nLines <- dim(data)[1]
   newdata <- data %>% 

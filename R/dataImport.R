@@ -11,7 +11,8 @@ dataImport <- function(id){
       
       ns <- NS(id)
       
-      selected_sheet = reactiveVal(NULL)
+      selected_sheet <- reactiveVal(NULL)
+      imported <- reactiveVal(FALSE)
       
       #update UI to let user pick a sheet
       output$sheets <- renderUI({
@@ -64,6 +65,7 @@ dataImport <- function(id){
             userFile()$datapath,
             sheet = selected_sheet()
           )
+          # browser()
           
         } else {
           filedat <- read.delim2(
@@ -75,7 +77,7 @@ dataImport <- function(id){
             dec = input$decimalPoint
           )
         }
-        
+        imported(TRUE)
         return(filedat)
         # cbind(rowNumber = 1:dim(filedat)[1], filedat)
       })
@@ -87,6 +89,10 @@ dataImport <- function(id){
       name <- reactive({
         userFile()$name
       })
+      
+      # imported <- reactive({
+      #   browser()
+      # })
       
       
       #       code <- reactive({
@@ -101,13 +107,14 @@ dataImport <- function(id){
       #                           dec = \'{input$decimalPoint}\')\n\n')})
       
       
-      
+      # browser()
       return(list(
         inputData = inputData,
         columns = columns,
         name = name,
         # code = code,
-        datapath = datapath
+        datapath = datapath,
+        imported = imported
       ))
     }
   )
