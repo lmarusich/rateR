@@ -1,15 +1,18 @@
 # ToDo Items:
 # - look into custom URLs
-# - enforce rating specifications
-# - add ratings to data preview
+# - make options for enforcing whole numbers (vs. decimals etc.)
+# - enforce label options
 # - add output/saving functionality
 # - functionality for multiple ratings per item?
 # - in modular window, add something to display which row they're on
 # - in rating tab, can we limit the clicking to the specific column?
 # - in rating tab, add instructions like "click an item to rate it"
+# - add "previous" button functionality
+# - let users add notes to each rating too
 library(shiny)
 library(shinyjs)
 library(DT)
+library(tidyverse)
 
 ui <- fluidPage(
   useShinyjs(),
@@ -42,19 +45,20 @@ ui <- fluidPage(
                                           label = "Next"))
                   ),
                   mainPanel(
-                    h1('Dataset'),
+                    h2('Dataset'),
                     DT::dataTableOutput('preview2')
                   )
                 )
               ),
               tabPanel(
                 title = "Rate!",
+                h2('Click on a row to start rating'),
                 DT::dataTableOutput('mainDT')
                 # modalUI("test")
               ),
               tabPanel(
                 title = "Save",
-                h1('download option'),
+                htmlOutput("ratedDownload"),
                 h1('save to google option')
               )
   )
@@ -64,18 +68,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   initialdf <- reactiveValues(df_data = NULL)
-  newdf <- reactiveValues(df_data = NULL)
   ratings <- reactiveValues(ratings = list())
-  
-  # observeEvent(input$file, {
-  #   values$df_data <- read.csv(input$file$datapath)
-  # })
-  # 
-  # observeEvent(input$Go, {
-  #   temp <- values$df_data[-input$Delete, ]
-  #   values$df_data <- temp
-  #   
-  # })
   
   #call data import module
   inputData <- dataImport(id = "import_ui")
@@ -84,10 +77,9 @@ server <- function(input, output, session) {
   #enable "next" button, and call rating options module
   observe({
     inputData$name()
+    # browser()
     req(inputData$imported())
     initialdf$df_data <- inputData$inputData()
-    # ratings$ratings <- character(length = nrow(initialdf$df_data))
-    # browser()
     enable('import_done')
     ratingOptions(id = "options_ui", data = inputData)
   })
@@ -109,33 +101,17 @@ server <- function(input, output, session) {
   
   #call rating modal module
   observeEvent(input$mainDT_rows_selected,{
-    # observe(
-    input$mainDT_rows_selected
-    # req(initialdf$df_data)
-    
-    # req(input$mainDT_rows_selected)
-    
-    showModal(myModal(ratingSpecs()$selectedColumn,input$mainDT_rows_selected, ratingSpecs()$ratingName))
-    #   newdf$df_data <- modal(
-    #     input,
-    #               data = initialdf$df_data,
-    #               reactive(input$mainDT_rows_selected),
-    #               ratingSpecs = ratingSpecs())
-    # # )
-    # temp <- initialdf$df_data
-    # browser()
-    # temp[[input$ratingName]] <- newdf()$rating
-    # browser()
+    showModal(myModal(initialdf,ratingSpecs()$selectedColumn,input$mainDT_rows_selected, ratingSpecs()$ratingName))
   })
   
   event_trigger <- reactive({
     list(input$next_button, input$close_button)
   })
+  
   observeEvent(ignoreInit = T, event_trigger(), {
     if(input$next_button==0 && input$close_button==0){
       return()
     }
-    # browser()
     validInput <- T
     #enforcing the rating/label type
     if (ratingSpecs()$ratingType == "labels"){
@@ -144,7 +120,7 @@ server <- function(input, output, session) {
       #first check that it's a number - if not, throw an error
       if (is.na(as.numeric(input$inputRating))){
         validInput = F
-        showModal(myModal(ratingSpecs()$selectedColumn,input$mainDT_rows_selected, ratingSpecs()$ratingName, failed = TRUE, failMsg = "Please enter a numeric rating"))
+        showModal(myModal(initialdf, ratingSpecs()$selectedColumn,input$mainDT_rows_selected, ratingSpecs()$ratingName, failed = TRUE, failMsg = "Please enter a numeric rating"))
         
         #then check if min/max was specified, and if so, if their rating is in that range
       } else if (ratingSpecs()$specified){
@@ -152,7 +128,7 @@ server <- function(input, output, session) {
             (input$inputRating > ratingSpecs()$maxNumRating)){
           #throw an error
           validInput = F
-          showModal(myModal(ratingSpecs()$selectedColumn,rownum(),
+          showModal(myModal(initialdf, ratingSpecs()$selectedColumn,input$mainDT_rows_selected,
                             ratingSpecs()$ratingName,
                             failed = TRUE,
                             failMsg = paste0("Please enter a numeric rating between ",
@@ -164,21 +140,15 @@ server <- function(input, output, session) {
       
       if (validInput){
         #save the rating
-        # temp <- initialdf$df_data
-        # temp[[ratingSpecs()$ratingName]][input$mainDT_rows_selected] <- input$inputRating
-        # browser()
-        # initialdf$df_data <- temp
         ratings$ratings[[input$mainDT_rows_selected]] <- input$inputRating
-        browser()
-        # df$row[rownum()] <- rownum()
-        # df$rating[rownum()] <- input$inputRating
         
+        #if they hit the next button, select the next row
         if (input$next_button){
           #go to next row
           selectRows(DT_proxy, selected = input$mainDT_rows_selected + 1) # selects the row of the next index
-
         }
         
+        #if they hit the save/close button, close the modal window
         if (input$close_button){
           removeModal()
         }
@@ -186,54 +156,6 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  myModal <- function(colname, rownum, ratingName, failed = FALSE, failMsg = "") {
-    # browser()
-    modalDialog(
-      title = "Item Rating",
-      sidebarLayout(
-        sidebarPanel(
-          h4(paste0(colname,":")),
-          p(initialdf$df_data[[colname]][rownum]),
-          width = 6
-        ),
-        
-        mainPanel(
-          
-          div(tags$b(ifelse(failed, failMsg, ""), style = "color: red")), #customize this based on the rating type
-          textInput(("inputRating"), 
-                    label = paste0(ratingName, " Rating:")), 
-          width = 6
-        )
-      ),
-      footer = tagList(
-        actionButton(("prev_button"), "Previous"),
-        actionButton(("next_button"), "Next"),
-        actionButton(("close_button"), "Save and Close")
-      )
-    )
-  }
-  
-  
-  
-  # observeEvent(input$next_button, {
-  #   browser() #update newdf inside the modal function?
-  #   selectRows(DT_proxy, selected = input$mainDT_rows_selected + 1) # selects the row of the next index
-  # })
-  
-  
-  # #if user has entered a rating
-  # #do something?
-  # observeEvent(input$`test-inputRating`,{
-  #   # enable('import_done')
-  #   # ratingOptions(id = "options_ui", data = inputData)
-  #   req(input$`test-inputRating`)
-  #   # browser()
-  # })
-  
-  # observeEvent(input$test-close_button,{
-  #     browser()
-  #   })
   #generate preview table of data
   main_preview_table <- reactive({
     req(inputData$name())
@@ -267,40 +189,13 @@ server <- function(input, output, session) {
     req(input$selectedColumn)
     req(input$ratingType)
     req(input$ratingName)
-    # browser()
-    temp <- addColumns(initialdf$df_data, input$ratingName, input$selectedColumn, ratings)
-    # browser()
-    # initialdf$df_data <- temp
-    # req(ratings$ratings)
-    # browser()
-    # temp2 <-initialdf$df_data
-    # temp2[[input$ratingName]] <- ratings
-    # 
+
+    temp <- addColumns(initialdf$df_data, input$ratingName, input$selectedColumn, ratings$ratings, input$ratingType)
+    initialdf$df_data <- temp
   })
-  #   req(inputData$name())
-  #   # browser()
-  #   req(input$selectedColumn)
-  #   req(input$ratingType)
-  #   # browser()
-  #   addColumns(inputData$inputData(), input$ratingName, input$selectedColumn)
-  #   
-  #   # req(newdf())
-  #   # browser()
-  #   # if (req(df)){
-  #   #   browser()
-  #   # }
-  #   
-  # })
-  
-  # rated_data <- reactive({
-  #   browser()
-  #   req(df)
-  #   browser()
-  # })
   
   #show new data on third tab
   output$mainDT <- DT::renderDataTable(
-    # modified_data(),
     initialdf$df_data,
     selection = 'single',
     rownames = F
@@ -321,16 +216,44 @@ server <- function(input, output, session) {
   #if user hits "next" on import tab, move to options tab
   observeEvent(input$import_done, {
     updateTabsetPanel(session, inputId = 'tabs', selected = "Ratings Options")
-    # ratingSpecs <- ratingOptions(id = "options_ui", data = inputData)
-    
   })
   
   #if user hits "next" on options tab, move to rating tab
   observeEvent(input$options_done, {
-    # ratingSpecs <- ratingOptions(id = "options_ui", data = inputData)
-    
     updateTabsetPanel(session, inputId = 'tabs', selected = "Rate!")
   })
+  
+  output$ratedDownload <- renderUI({
+    req(inputData$name())
+    tagList(
+      h4("Download the rated data"),
+      selectInput("downloadFormat",
+                  label = "File format",
+                  choices = list(
+                      "csv" = ".csv",
+                      "txt" = ".txt"
+                    ),
+                  selected = NULL),
+      downloadButton("downloadData",
+                     label = "Download Data")
+    )
+  })
+  
+  # Download button
+  output$downloadData <- downloadHandler(
+    filename = function(){
+      paste0(inputData$name(), "-rated", input$downloadFormat)
+      },
+    content = function(file) {
+      if(input$downloadFormat == '.csv') {
+        write.csv(initialdf$df_data, file, row.names = F)
+      } 
+      if(input$downloadFormat == '.txt') {
+        write.table(initialdf$df_data, file, row.names = F, sep = "\t")
+      } 
+    }
+  )
+  
   
   
 }

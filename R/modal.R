@@ -74,7 +74,9 @@ modal <- function(input, data, selectedRow, ratingSpecs){
       } 
       
       if (validInput){
+        # return(input$inputRating)
         #save the rating
+        # browser()
         df$row[rownum()] <- rownum()
         df$rating[rownum()] <- input$inputRating
         
