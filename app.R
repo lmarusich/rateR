@@ -14,58 +14,80 @@ library(shinyjs)
 library(DT)
 library(tidyverse)
 
-ui <- fluidPage(
-  useShinyjs(),
-  titlePanel("rateR"),
-  
-  tabsetPanel(id = "tabs",
-              tabPanel(
-                title = "Data Import",
-                sidebarLayout(
-                  sidebarPanel(
-                    title = "Import Options",
-                    dataImportUI("import_ui", label = "Import Method:"),
-                    br(),
-                    disabled(actionButton("import_done",
-                                          label = "Next"))
-                  ),
-                  mainPanel(
-                    h4('Data Preview:'),
-                    # tableOutput('mainPreview')
-                    DT::dataTableOutput('preview1')
-                  )
-                )
-              ),
-              tabPanel(
-                title = "Ratings Options",
-                sidebarLayout(
-                  sidebarPanel(
-                    ratingOptionsUI("options_ui", label = "Ratings Options:"),
-                    disabled(actionButton("options_done",
-                                          label = "Next"))
-                  ),
-                  mainPanel(
-                    h2('Dataset'),
-                    DT::dataTableOutput('preview2')
-                  )
-                )
-              ),
-              tabPanel(
-                title = "Rate!",
-                h2('Click on a row to start rating'),
-                DT::dataTableOutput('mainDT')
-                # modalUI("test")
-              ),
-              tabPanel(
-                title = "Save",
-                htmlOutput("ratedDownload"),
-                h1('save to google option')
-              )
-  )
-)
+jscode <- HTML("$('body').on('shown.bs.modal', (x) => 
+                   $(x.target).find('input[type=\"text\"]:first').focus())")
 
+ui <- function(request){
+  fluidPage(
+    useShinyjs(),
+    titlePanel("rateR"),
+    tags$header(tags$script(type = "text/javascript", jscode)),
+    tabsetPanel(id = "tabs",
+                tabPanel(
+                  title = "Data Import",
+                  sidebarLayout(
+                    sidebarPanel(
+                      title = "Import Options",
+                      dataImportUI("import_ui", label = "Import Method:"),
+                      br(),
+                      disabled(actionButton("import_done",
+                                            label = "Next"))
+                    ),
+                    mainPanel(
+                      h4('Data Preview:'),
+                      # tableOutput('mainPreview')
+                      DT::dataTableOutput('preview1')
+                    )
+                  )
+                ),
+                tabPanel(
+                  title = "Ratings Options",
+                  sidebarLayout(
+                    sidebarPanel(
+                      ratingOptionsUI("options_ui", label = "Ratings Options:"),
+                      disabled(actionButton("options_done",
+                                            label = "Next")),
+                      disabled(bookmarkButton(id="bookmarkBtn", label = "Bookmark Rating Options"))
+                    ),
+                    mainPanel(
+                      h2('Dataset'),
+                      DT::dataTableOutput('preview2')
+                    )
+                  )
+                ),
+                tabPanel(
+                  title = "Rate!",
+                  h2('Click on a row to start rating'),
+                  DT::dataTableOutput('mainDT')
+                  # modalUI("test")
+                ),
+                tabPanel(
+                  title = "Save",
+                  htmlOutput("ratedDownload"),
+                  h1('save to google option')
+                )
+    )
+  )
+}
 
 server <- function(input, output, session) {
+  
+  bookmarkingWhitelist <- c("selectedColumn",
+                            "ratingName",
+                            "ratingType",
+                            "specifyRatings",
+                            "ratingLabels",
+                            "minNumRating",
+                            "maxNumRating")
+  
+  observeEvent(input$bookmarkBtn, {
+    session$doBookmark()
+  })
+  
+  observe({
+    toExclude <- setdiff(names(input), bookmarkingWhitelist)
+    setBookmarkExclude(toExclude)
+  })
   
   initialdf <- reactiveValues(df_data = NULL)
   ratings <- reactiveValues(ratings = list())
@@ -225,6 +247,7 @@ server <- function(input, output, session) {
     req(input$ratingType)
     req(input$ratingName)
     enable("options_done")
+    enable("bookmarkBtn")
   })
   
   #if user hits "next" on import tab, move to options tab
@@ -272,4 +295,4 @@ server <- function(input, output, session) {
   
 }
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, enableBookmarking = "url")
