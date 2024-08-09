@@ -33,10 +33,12 @@ dataImportUI <- function(id, label = "Import Method:") {
       textInput("googleURL",
                 label = "Paste link to Google Sheet here:")
     ),
-    p("If the preview doesn't appear correctly on the right, click below."),
-    tags$details(
-      tags$summary("Data options", style = "display:revert;"),
+    p("If the preview doesn't appear correctly on the right, edit the options below."),
+    
       checkboxInput(ns("header"), "Header", TRUE),
+      checkboxInput(ns("excludeEmptyCols"), "Exclude empty columns?", TRUE),
+    tags$details(
+    tags$summary("More options", style = "display:revert;"),
       radioButtons(ns("sep"), "Column Delimiter",
                    choices = c(Comma = ",",
                                Semicolon = ";",
@@ -50,7 +52,8 @@ dataImportUI <- function(id, label = "Import Method:") {
                    choices = c(None = "",
                                "Double Quote" = "\"",
                                "Single Quote" = "'"),
-                   selected = "")
+                   selected = "\"")
+    # ,
       ),
 
     

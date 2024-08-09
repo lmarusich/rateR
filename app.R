@@ -21,7 +21,9 @@ ui <- function(request){
   fluidPage(
     useShinyjs(),
     titlePanel("rateR"),
-    tags$header(tags$script(type = "text/javascript", jscode)),
+    tags$header(
+      tags$script(type = "text/javascript", jscode),
+    ),
     tabsetPanel(id = "tabs",
                 tabPanel(
                   title = "Data Import",
@@ -124,6 +126,12 @@ server <- function(input, output, session) {
   observeEvent(input$mainDT_rows_selected,{
     showModal(myModal(initialdf,ratingSpecs()$selectedColumn,input$mainDT_rows_selected, ratingSpecs()$ratingName))
   })
+  
+  # observeEvent(input$inputRating, {
+  #   req(input$inputRating)
+  #   # browser()
+  #   session$sendCustomMessage("myCallbackHandler",list(NULL)) 
+  # })
   
   event_trigger <- reactive({
     list(input$next_button, input$close_button)

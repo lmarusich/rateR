@@ -22,7 +22,7 @@ addColumns <- function(data, newcolName, ratedColumn, ratings, ratingType){
   return(newdata)
 }
 
-myModal <- function(initialdf, colname, rownum, ratingName, failed = FALSE, failMsg = "") {
+myModal <- function(initialdf, colname, rownum, ratingName, existingRating = "!", failed = FALSE, failMsg = "") {
   # browser()
   modalDialog(
     title = "Item Rating",
@@ -37,7 +37,8 @@ myModal <- function(initialdf, colname, rownum, ratingName, failed = FALSE, fail
         
         div(tags$b(ifelse(failed, failMsg, ""), style = "color: red")), #customize this based on the rating type
         textInput(("inputRating"), 
-                  label = paste0(ratingName, " Rating:")), 
+                  label = paste0(ratingName, " Rating:"),
+                  value = existingRating), 
         width = 6
       )
     ),

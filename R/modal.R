@@ -4,7 +4,7 @@ modal <- function(input, data, selectedRow, ratingSpecs){
   df <- data.frame(row = numeric(nrow(data)),
                    rating = numeric(nrow(data)))
   
-  myModal <- function(colname, rownum, ratingName, failed = FALSE, failMsg = "") {
+  myModal <- function(colname, rownum, ratingName, existingRating, failed = FALSE, failMsg = "") {
     
     modalDialog(
       title = "Item Rating",
@@ -19,7 +19,9 @@ modal <- function(input, data, selectedRow, ratingSpecs){
           
           div(tags$b(ifelse(failed, failMsg, ""), style = "color: red")), #customize this based on the rating type
           textInput(("inputRating"), 
-                    label = paste0(ratingName, " Rating:")), 
+                    label = paste0(ratingName, " Rating0:"),
+                    value = "existingRating",
+                    placeholder = "existingRating"), 
           width = 6
         )
       ),
@@ -36,7 +38,7 @@ modal <- function(input, data, selectedRow, ratingSpecs){
   rownum(selectedRow())
   cat(file=stderr(), rownum(), "\n")
   # browser()
-  showModal(myModal(ratingSpecs$selectedColumn,rownum(), ratingSpecs$ratingName))
+  showModal(myModal(ratingSpecs$selectedColumn,rownum(), ratingSpecs$ratingName, df$rating[rownum()]))
   # browser()
   event_trigger <- reactive({
     list(input$next_button, input$close_button)
@@ -55,7 +57,7 @@ modal <- function(input, data, selectedRow, ratingSpecs){
       #first check that it's a number - if not, throw an error
       if (is.na(as.numeric(input$inputRating))){
         validInput = F
-        showModal(myModal(ratingSpecs$selectedColumn,rownum(), ratingSpecs$ratingName, failed = TRUE, failMsg = "Please enter a numeric rating"))
+        showModal(myModal(ratingSpecs$selectedColumn,rownum(), ratingSpecs$ratingName, df$rating[rownum()],failed = TRUE, failMsg = "Please enter a numeric rating"))
         
         #then check if min/max was specified, and if so, if their rating is in that range
       } else if (ratingSpecs$specified){
@@ -85,7 +87,7 @@ modal <- function(input, data, selectedRow, ratingSpecs){
           rownum(rownum() + 1)
 
           if (rownum() <= lastrow){
-            showModal(myModal(ratingSpecs$selectedColumn,rownum(), ratingSpecs$ratingName))
+            showModal(myModal(ratingSpecs$selectedColumn,rownum(), ratingSpecs$ratingName, df$rating[rownum()]))
           }
         }
         

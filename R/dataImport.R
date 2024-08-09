@@ -68,6 +68,7 @@ dataImport <- function(id){
           # browser()
           
         } else {
+          # browser()
           filedat <- read.delim2(
             userFile()$datapath,
             header = input$header,
@@ -76,7 +77,14 @@ dataImport <- function(id){
             check.names = TRUE,
             dec = input$decimalPoint
           )
+
         }
+        
+        if (input$excludeEmptyCols){
+          filedat <- filedat %>%
+            select_if(function(x) { sum(!is.na(x)) > 0 })
+        }
+        
         imported(TRUE)
         return(filedat)
         # cbind(rowNumber = 1:dim(filedat)[1], filedat)
