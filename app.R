@@ -7,7 +7,6 @@
 # - in modular window, add something to display which row they're on
 # - in rating tab, can we limit the clicking to the specific column?
 # - in rating tab, add instructions like "click an item to rate it"
-# - add "previous" button functionality
 # - let users add notes to each rating too
 library(shiny)
 library(shinyjs)
@@ -15,7 +14,7 @@ library(DT)
 library(tidyverse)
 
 jscode <- HTML("$('body').on('shown.bs.modal', (x) => 
-                   $(x.target).find('input[type=\"text\"]:first').focus())")
+                   $(x.target).find('input[type=\"text\"]:first').select())")
 
 ui <- function(request){
   fluidPage(
@@ -92,7 +91,8 @@ server <- function(input, output, session) {
   })
   
   initialdf <- reactiveValues(df_data = NULL)
-  ratings <- reactiveValues(ratings = list())
+  ratings <- reactiveValues(ratings = list(),
+                            notes = list())
   
   #call data import module
   inputData <- dataImport(id = "import_ui")
@@ -124,7 +124,13 @@ server <- function(input, output, session) {
   
   #call rating modal module
   observeEvent(input$mainDT_rows_selected,{
-    showModal(myModal(initialdf,ratingSpecs()$selectedColumn,input$mainDT_rows_selected, ratingSpecs()$ratingName))
+    # browser()
+    showModal(myModal(initialdf,
+                      ratingSpecs()$selectedColumn,
+                      input$mainDT_rows_selected, 
+                      ratingSpecs()$ratingName,
+                      existingRating = initialdf$df_data[[ratingSpecs()$ratingName]][input$mainDT_rows_selected],
+                      existingNotes = initialdf$df_data[[paste0(ratingSpecs()$ratingName, "_notes")]][input$mainDT_rows_selected]))
   })
   
   # observeEvent(input$inputRating, {
@@ -134,11 +140,11 @@ server <- function(input, output, session) {
   # })
   
   event_trigger <- reactive({
-    list(input$next_button, input$close_button)
+    list(input$prev_button, input$next_button, input$close_button)
   })
   
   observeEvent(ignoreInit = T, event_trigger(), {
-    if(input$next_button==0 && input$close_button==0){
+    if(input$prev_button==0 && input$next_button==0 && input$close_button==0){
       return()
     }
     validInput <- T
@@ -152,10 +158,25 @@ server <- function(input, output, session) {
                             ratingSpecs()$selectedColumn,
                             input$mainDT_rows_selected, 
                             ratingSpecs()$ratingName, 
+                            existingRating = input$inputRating,
+                            existingNotes = input$inputNotes,
                             failed = TRUE, 
                             failMsg = paste0("Please enter one of the following labels: ",
                                              paste(ratingSpecs()$ratingLabels, collapse = ', '))))
           
+        }
+      } else {
+        if (nchar(input$inputRating)<1){
+          validInput = F
+          showModal(myModal(initialdf, 
+                            ratingSpecs()$selectedColumn,
+                            input$mainDT_rows_selected, 
+                            ratingSpecs()$ratingName, 
+                            existingRating = input$inputRating,
+                            existingNotes = input$inputNotes,
+                            failed = TRUE, 
+                            failMsg = paste0("Please enter a label: ",
+                                             paste(ratingSpecs()$ratingLabels, collapse = ', '))))
         }
       }
       
@@ -163,7 +184,13 @@ server <- function(input, output, session) {
       #first check that it's a number - if not, throw an error
       if (is.na(as.numeric(input$inputRating))){
         validInput = F
-        showModal(myModal(initialdf, ratingSpecs()$selectedColumn,input$mainDT_rows_selected, ratingSpecs()$ratingName, failed = TRUE, failMsg = "Please enter a numeric rating"))
+        showModal(myModal(initialdf, 
+                          ratingSpecs()$selectedColumn,
+                          input$mainDT_rows_selected, 
+                          ratingSpecs()$ratingName, 
+                          existingRating = input$inputRating,
+                          existingNotes = input$inputNotes,
+                          failed = TRUE, failMsg = "Please enter a numeric rating"))
         
         #then check if min/max was specified, and if so, if their rating is in that range
       } else if (ratingSpecs()$specified){
@@ -173,6 +200,8 @@ server <- function(input, output, session) {
           validInput = F
           showModal(myModal(initialdf, ratingSpecs()$selectedColumn,input$mainDT_rows_selected,
                             ratingSpecs()$ratingName,
+                            existingRating = input$inputRating,
+                            existingNotes = input$inputNotes,
                             failed = TRUE,
                             failMsg = paste0("Please enter a numeric rating between ",
                                              ratingSpecs()$minNumRating,
@@ -185,6 +214,14 @@ server <- function(input, output, session) {
     if (validInput){
       #save the rating
       ratings$ratings[[input$mainDT_rows_selected]] <- input$inputRating
+      #save the notes
+      ratings$notes[[input$mainDT_rows_selected]] <- input$inputNotes
+      # browser()
+      #if they hit the previous button, select the previous row
+      if (input$prev_button){
+        #go to previous row
+        selectRows(DT_proxy, selected = input$mainDT_rows_selected - 1) # selects the row of the previous index
+      }
       
       #if they hit the next button, select the next row
       if (input$next_button){
@@ -234,7 +271,7 @@ server <- function(input, output, session) {
     req(input$ratingType)
     req(input$ratingName)
     
-    temp <- addColumns(initialdf$df_data, input$ratingName, input$selectedColumn, ratings$ratings, input$ratingType)
+    temp <- addColumns(initialdf$df_data, input$ratingName, input$selectedColumn, ratings$ratings, ratings$notes, input$ratingType)
     initialdf$df_data <- temp
   })
   

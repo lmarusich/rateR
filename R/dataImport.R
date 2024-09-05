@@ -80,6 +80,7 @@ dataImport <- function(id){
 
         }
         
+        #NOTE, this needs to change probably. do the exclusion in the displaying of the data instead
         if (input$excludeEmptyCols){
           filedat <- filedat %>%
             select_if(function(x) { sum(!is.na(x)) > 0 })
@@ -87,7 +88,7 @@ dataImport <- function(id){
         
         imported(TRUE)
         return(filedat)
-        # cbind(rowNumber = 1:dim(filedat)[1], filedat)
+        
       })
       
       columns <- reactive({
