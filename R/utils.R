@@ -4,12 +4,14 @@ addColumns <- function(data, newcolName, ratedColumn, ratings, notes, ratingType
   
   ratings <- map(ratings, ~ifelse(is.null(.x), NA, .x)) %>%
     unlist()
+  notes <- map(notes, ~ifelse(is.null(.x), NA, .x)) %>%
+    unlist()
   
   notecolName <- paste0(newcolName, "_notes")
   
   nLines <- dim(data)[1]
   newdata <- data %>% 
-    mutate(rowNum = row_number(), .before = 1) %>%
+    # mutate(rowNum = row_number(), .before = 1) %>%
     mutate(!!newcolName := NA,
            !!notecolName := "",
            .after = ratedColumn)
@@ -52,12 +54,14 @@ myModal <- function(initialdf, colname, rownum, ratingName, existingRating = "",
                   value = existingNotes),
         width = 6
       )
-    ),
+    )
+    ,
 
       footer = tagList(
         actionButton(("prev_button"), "Previous", disabled = ifelse(rownum == 1, T, F)),
         actionButton(("next_button"), "Next", disabled = ifelse(rownum == dim(initialdf$df_data)[1], T, F)),
-        actionButton(("close_button"), "Save and Close")
+        actionButton(("close_button"), "Save and Close"),
+        modalButton( "Cancel")
       )
     # }
   )

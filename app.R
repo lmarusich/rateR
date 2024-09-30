@@ -1,27 +1,26 @@
 # ToDo Items:
 # - look into custom URLs
 # - make options for enforcing whole numbers (vs. decimals etc.)
-# - enforce label options
 # - add output/saving functionality
 # - functionality for multiple ratings per item?
-# - in modular window, add something to display which row they're on
 # - in rating tab, can we limit the clicking to the specific column?
-# - in rating tab, add instructions like "click an item to rate it"
-# - let users add notes to each rating too
+
 library(shiny)
 library(shinyjs)
 library(DT)
 library(tidyverse)
+library(datamods)
 
-jscode <- HTML("$('body').on('shown.bs.modal', (x) => 
-                   $(x.target).find('input[type=\"text\"]:first').select())")
+jscode <- HTML("$('body').on('shown.bs.modal', (x) =>
+                    $(x.target).find('input[type=\"text\"]#inputRating:first').focus().select());
+")
 
 ui <- function(request){
   fluidPage(
     useShinyjs(),
     titlePanel("rateR"),
     tags$header(
-      tags$script(type = "text/javascript", jscode),
+      tags$script(type = "text/javascript", jscode)
     ),
     tabsetPanel(id = "tabs",
                 tabPanel(
@@ -38,6 +37,33 @@ ui <- function(request){
                       h4('Data Preview:'),
                       # tableOutput('mainPreview')
                       DT::dataTableOutput('preview1')
+                    )
+                  )
+                ),
+                tabPanel(
+                  title = "Data Filtering",
+                  sidebarLayout(
+                    sidebarPanel(
+                      disabled(checkboxInput(
+                        "filterBool",
+                        label = "Filter the dataset?",
+                        value = F
+                      )),
+                      conditionalPanel(
+                        condition = "input.filterBool",
+                        uiOutput("filteringCols")
+                        
+                      ),
+                    conditionalPanel(
+                      condition = "input.filterBool & input.filteringCols != ''",
+                      filter_data_ui("filtering", max_height = "500px")
+                    ),
+                    disabled(actionButton("filter_done",
+                                 label = "Next"))
+                      
+                    ),
+                    mainPanel(
+                      DT::dataTableOutput('filteredpreview')
                     )
                   )
                 ),
@@ -64,8 +90,9 @@ ui <- function(request){
                 ),
                 tabPanel(
                   title = "Save",
-                  htmlOutput("ratedDownload"),
-                  h1('save to google option')
+                  htmlOutput("ratedDownload")
+                  # ,
+                  # h1('save to google option')
                 )
     )
   )
@@ -73,6 +100,7 @@ ui <- function(request){
 
 server <- function(input, output, session) {
   
+  #bookmarking options
   bookmarkingWhitelist <- c("selectedColumn",
                             "ratingName",
                             "ratingType",
@@ -91,28 +119,80 @@ server <- function(input, output, session) {
   })
   
   initialdf <- reactiveValues(df_data = NULL)
+  filtereddf <- reactiveValues(df_data = NULL)
   ratings <- reactiveValues(ratings = list(),
                             notes = list())
   
+  ###################################################################
+  ### Data importing
+  ###################################################################
   #call data import module
   inputData <- dataImport(id = "import_ui")
+  
+  
+  ###################################################################
+  ### Data filtering
+  ###################################################################
+  
+  #if user has imported data, 
+  #enable "next" button, and enable filtering options
+  observe({
+    inputData$name()
+    req(inputData$imported())
+    initialdf$df_data <- inputData$inputData()
+    enable('import_done')
+    enable('filterBool')
+    enable('filter_done')
+  })
+  
+  output$filteringCols <- renderUI({
+    selectInput(
+      "filteringCols",
+      label = "Filter by values of which columns?",
+      choices  = c("",inputData$columns()),
+      multiple = T
+    )
+  })
+  
+  res_filter <- filter_data_server(
+    id = "filtering",
+    data = reactive(initialdf$df_data),
+    name = reactive("filtered_data"),
+    vars = reactive(input$filteringCols),
+    widget_char = "picker",
+    widget_num = "slider",
+    widget_date = "slider",
+    label_na = "Include missing cells?"
+
+  )
+
+  output$filteredpreview <- DT::renderDataTable(
+    res_filter$filtered(),
+    rownames = F,
+    selection = 'none'
+  )
+  
+
+  ###################################################################
+  ### Rating options
+  ###################################################################
   
   #if user has imported data, 
   #enable "next" button, and call rating options module
   observe({
     inputData$name()
     req(inputData$imported())
-    initialdf$df_data <- inputData$inputData()
-    enable('import_done')
+    filtereddf$df_data <-  res_filter$filtered()
+    # enable('import_done')
     ratingOptions(id = "options_ui", data = inputData)
   })
   
   ratingSpecs <- reactive({
     req(input$ratingType)
-    req(input$selectedColumn)
+    req(input$`options_ui-selectedColumn`)
     req(input$ratingName)
     return(list(
-      selectedColumn = (input$selectedColumn),
+      selectedColumn = (input$`options_ui-selectedColumn`),
       ratingName = (input$ratingName),
       ratingType = (input$ratingType),
       specified = input$specifyRatings,
@@ -122,22 +202,17 @@ server <- function(input, output, session) {
     ))
   })
   
+
   #call rating modal module
   observeEvent(input$mainDT_rows_selected,{
     # browser()
-    showModal(myModal(initialdf,
+    showModal(myModal(filtereddf,
                       ratingSpecs()$selectedColumn,
                       input$mainDT_rows_selected, 
                       ratingSpecs()$ratingName,
-                      existingRating = initialdf$df_data[[ratingSpecs()$ratingName]][input$mainDT_rows_selected],
-                      existingNotes = initialdf$df_data[[paste0(ratingSpecs()$ratingName, "_notes")]][input$mainDT_rows_selected]))
+                      existingRating = filtereddf$df_data[[ratingSpecs()$ratingName]][input$mainDT_rows_selected],
+                      existingNotes = filtereddf$df_data[[paste0(ratingSpecs()$ratingName, "_notes")]][input$mainDT_rows_selected]))
   })
-  
-  # observeEvent(input$inputRating, {
-  #   req(input$inputRating)
-  #   # browser()
-  #   session$sendCustomMessage("myCallbackHandler",list(NULL)) 
-  # })
   
   event_trigger <- reactive({
     list(input$prev_button, input$next_button, input$close_button)
@@ -154,7 +229,7 @@ server <- function(input, output, session) {
       if (ratingSpecs()$specified) {
         if (!(input$inputRating %in% ratingSpecs()$ratingLabels)){
           validInput = F
-          showModal(myModal(initialdf, 
+          showModal(myModal(filtereddf, 
                             ratingSpecs()$selectedColumn,
                             input$mainDT_rows_selected, 
                             ratingSpecs()$ratingName, 
@@ -168,7 +243,7 @@ server <- function(input, output, session) {
       } else {
         if (nchar(input$inputRating)<1){
           validInput = F
-          showModal(myModal(initialdf, 
+          showModal(myModal(filtereddf, 
                             ratingSpecs()$selectedColumn,
                             input$mainDT_rows_selected, 
                             ratingSpecs()$ratingName, 
@@ -184,7 +259,7 @@ server <- function(input, output, session) {
       #first check that it's a number - if not, throw an error
       if (is.na(as.numeric(input$inputRating))){
         validInput = F
-        showModal(myModal(initialdf, 
+        showModal(myModal(filtereddf, 
                           ratingSpecs()$selectedColumn,
                           input$mainDT_rows_selected, 
                           ratingSpecs()$ratingName, 
@@ -198,7 +273,7 @@ server <- function(input, output, session) {
             (as.numeric(input$inputRating) > ratingSpecs()$maxNumRating)){
           #throw an error
           validInput = F
-          showModal(myModal(initialdf, ratingSpecs()$selectedColumn,input$mainDT_rows_selected,
+          showModal(myModal(filtereddf, ratingSpecs()$selectedColumn,input$mainDT_rows_selected,
                             ratingSpecs()$ratingName,
                             existingRating = input$inputRating,
                             existingNotes = input$inputNotes,
@@ -216,17 +291,68 @@ server <- function(input, output, session) {
       ratings$ratings[[input$mainDT_rows_selected]] <- input$inputRating
       #save the notes
       ratings$notes[[input$mainDT_rows_selected]] <- input$inputNotes
-      # browser()
+      
       #if they hit the previous button, select the previous row
       if (input$prev_button){
+        
+        temprow <- input$mainDT_rows_selected
+        tempdone <- F
+        
+        # #if skipping empty cells, check if the cell to be rated is empty
+        # if(input$skipEmptyCells){
+        #   while (temprow > 1){
+        #     temprow <- temprow - 1
+        #     # browser()
+        #     if(!is.na(initialdf$df_data[[ratingSpecs()$selectedColumn]][temprow])){
+        #       break
+        #     }
+        #     
+        #     #if the previous row is still NA, and it's the first row, just close the modal
+        #     if(temprow == 1){
+        #       tempdone <- T
+        #       removeModal()
+        #     }
+        #   }
+        # } else {
+          temprow <- temprow - 1
+        # }
+        
         #go to previous row
-        selectRows(DT_proxy, selected = input$mainDT_rows_selected - 1) # selects the row of the previous index
+        if(!tempdone){
+          selectRows(DT_proxy, selected = temprow) # selects the row of the previous index
+        }
+        
       }
       
       #if they hit the next button, select the next row
       if (input$next_button){
+        
+        temprow <- input$mainDT_rows_selected
+        tempdone <- F
+        
+        # #if skipping empty cells, check if the cell to be rated is empty
+        # if(input$skipEmptyCells){
+        #   while (temprow < dim(initialdf$df_data)[1]){
+        #     temprow <- temprow + 1
+        #     if(!is.na(initialdf$df_data[[ratingSpecs()$selectedColumn]][temprow])){
+        #       break
+        #     }
+        #     
+        #     #if the next row is still NA, and it's the last row, just close the modal
+        #     if(temprow == dim(initialdf$df_data)[1]){
+        #       tempdone <- T
+        #       removeModal()
+        #     }
+        #   }
+        # } else {
+          temprow <- temprow + 1
+        # }
+        
         #go to next row
-        selectRows(DT_proxy, selected = input$mainDT_rows_selected + 1) # selects the row of the next index
+        if (!tempdone){
+          selectRows(DT_proxy, selected = temprow) # selects the row of the next index
+        }
+        
       }
       
       #if they hit the save/close button, close the modal window
@@ -237,11 +363,22 @@ server <- function(input, output, session) {
     
   })
   
-  #generate preview table of data
+  #generate preview table of raw data
   main_preview_table <- reactive({
     req(inputData$name())
     DT::datatable(
       inputData$inputData(),
+      rownames = F,
+      selection = 'none',
+      options = list(dom = 'tp', ordering = F)
+    )
+  })
+  
+  #generate preview table of filtered data
+  filtered_preview_table <- reactive({
+    req(inputData$name())
+    DT::datatable(
+      res_filter$filtered(),
       rownames = F,
       selection = 'none',
       options = list(dom = 'tp', ordering = F)
@@ -255,29 +392,28 @@ server <- function(input, output, session) {
   
   #show preview table on second page (highlight selected column)
   output$preview2 <- DT::renderDataTable({
-    main_preview_table() %>% DT::formatStyle(
-      columns = ifelse(nchar(input$selectedColumn)>0, input$selectedColumn, F),
+    filtered_preview_table() %>% DT::formatStyle(
+      columns = ifelse(nchar(input$`options_ui-selectedColumn`)>0, input$`options_ui-selectedColumn`, F),
       background = 'yellow'
     )
   })
   
   #call addColumns function to add rownumber column and ratings/notes columns to data
-  # modified_data <- reactive({
   observe({
-    input$selectedColumn
+    input$`options_ui-selectedColumn`
     input$ratingType
     input$ratingName
-    req(input$selectedColumn)
+    req(input$`options_ui-selectedColumn`)
     req(input$ratingType)
     req(input$ratingName)
     
-    temp <- addColumns(initialdf$df_data, input$ratingName, input$selectedColumn, ratings$ratings, ratings$notes, input$ratingType)
-    initialdf$df_data <- temp
+    temp <- addColumns(filtereddf$df_data, input$ratingName, input$`options_ui-selectedColumn`, ratings$ratings, ratings$notes, input$ratingType)
+    filtereddf$df_data <- temp
   })
   
   #show new data on third tab
   output$mainDT <- DT::renderDataTable(
-    initialdf$df_data,
+    filtereddf$df_data,
     selection = 'single',
     rownames = F
   )
@@ -286,17 +422,22 @@ server <- function(input, output, session) {
   
   #if user selects a column and chooses a type of rating, enable "next" button
   observe({
-    input$selectedColumn
+    input$`options_ui-selectedColumn`
     input$ratingType
-    req(input$selectedColumn)
+    req(input$`options_ui-selectedColumn`)
     req(input$ratingType)
     req(input$ratingName)
     enable("options_done")
     enable("bookmarkBtn")
   })
   
-  #if user hits "next" on import tab, move to options tab
+  #if user hits "next" on import tab, move to filtering tab
   observeEvent(input$import_done, {
+    updateTabsetPanel(session, inputId = 'tabs', selected = "Data Filtering")
+  })
+  
+  #if user hits "next" on filter tab, move to options tab
+  observeEvent(input$filter_done, {
     updateTabsetPanel(session, inputId = 'tabs', selected = "Ratings Options")
   })
   
@@ -327,11 +468,15 @@ server <- function(input, output, session) {
       paste0(inputData$name(), "-rated", input$downloadFormat)
     },
     content = function(file) {
+      # browser()
+      finaldf <- full_join(inputData$inputData(), filtereddf$df_data)
+      
       if(input$downloadFormat == '.csv') {
-        write.csv(initialdf$df_data, file, row.names = F)
+        # browser()
+        write.csv(finaldf, file, row.names = F)
       } 
       if(input$downloadFormat == '.txt') {
-        write.table(initialdf$df_data, file, row.names = F, sep = "\t")
+        write.table(finaldf, file, row.names = F, sep = "\t")
       } 
     }
   )

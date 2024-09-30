@@ -1,7 +1,5 @@
 library("tidyr") #do we still need this one here?
 library("readxl")
-# For the code (already loaded from server.R)
-# library("glue")
 
 dataImport <- function(id){
   moduleServer(
@@ -86,6 +84,10 @@ dataImport <- function(id){
             select_if(function(x) { sum(!is.na(x)) > 0 })
         }
         
+        #add row numbers here, so we can merge the filtered dataset back with the full one later
+        filedat <- filedat %>%
+          mutate(rowNum = row_number(), .before = 1)
+        
         imported(TRUE)
         return(filedat)
         
@@ -99,24 +101,7 @@ dataImport <- function(id){
         userFile()$name
       })
       
-      # imported <- reactive({
-      #   browser()
-      # })
-      
-      
-      #       code <- reactive({
-      #         quoteCode <- ifelse(input$quote == '\'', '"{input$quote}"', '\'{input$quote}\'')
-      #         sepCode <- ifelse(input$sep == '\t', '\\t', '{input$sep}')
-      #         glue('## Load the data
-      # inputData <- read.delim2("{name()}",
-      #                           header = {input$header},
-      #                           sep = \'', sepCode, '\',
-      #                           quote = ', quoteCode, ',
-      #                           check.names = TRUE,
-      #                           dec = \'{input$decimalPoint}\')\n\n')})
-      
-      
-      # browser()
+
       return(list(
         inputData = inputData,
         columns = columns,

@@ -1,65 +1,44 @@
-# For gather
-library("tidyr")
-# For the code (already loaded from server.R)
-# library("glue")
-
 ratingOptions <- function(id, data){
   moduleServer(
     id,
-
-
-
+    
     function(input, output, session) {
-
-
-      # UI - Data - Filter the data.
-      output$generatedUI <- renderUI({
-        # req(data$name()) #conditions are the column names
-        tagList(
-          selectInput('selectedColumn',
-                      label = 'Select the column containing items to be labeled/rated:',
-                      choices = c("",data$columns()),
-                      selected = NULL,
-                      multiple = FALSE),
-          textInput('ratingName',
-                    label = 'Name the new column of labels/ratings:',
-                    value = "",
-                    placeholder = "new column name"),
-          selectInput('ratingType',
-                      label = 'Type of ratings:',
-                      choices = c("","labels","numbers"),
-                      selected = NULL,
-                      multiple = FALSE),
-          checkboxInput('specifyRatings',
-                        label = "Specify what rating values will be allowed?"),
-          conditionalPanel(condition = 'input.ratingType == "numbers" & input.specifyRatings',
-                           numericInput('minNumRating',
-                                        label = "Minimum rating:",
-                                        value = 0),
-                           numericInput('maxNumRating',
-                                        label = "Maximum rating:",
-                                        value = 0)
-                           
-          ),
-          conditionalPanel(condition = 'input.ratingType == "labels" & input.specifyRatings',
-                           textAreaInput('ratingLabels',
-                                     label = 'Enter acceptable labels, with each label on its own line',
-                                     placeholder = 'Label1\nLabel2\nLabel3\n...')
-
-        ))
+      # browser()
+      
+      ns <- NS(id)
+      
+      # The selected file, if any
+      selectedCol <- reactive({
+      req(input$selectedColumn)
+        if (!is.null(input$selectedColumn)){
+          return(input$selectedColumn)
+        } else {
+          return(NULL)
+        }
       })
       
-      # return(list(
-      #   selectedColumn = reactive(input$selectedColumn),
-      #   ratingName = reactive(ratingName),
-      #   ratingType = reactive(ratingType),
-      #   minNumRating = reactive(minNumRating),
-      #   minNumRating = reactive(minNumRating),
-      #   ratingLabels = reactive(ratingLabels)
-      # ))
-
-
-
+      
+      output$generatedUI1 <- renderUI({
+        selectInput(ns('selectedColumn'),
+                    label = 'Select the column containing items to be labeled/rated:',
+                    choices = c("",data$columns()),
+                    selected = NULL,
+                    multiple = FALSE)
+        
+        
+      })
+      
+      # output$generatedUI2 <- renderUI({
+      #   if (is.null(selectedCol())) {
+      #     return(NULL)
+      #   } else {
+      #     checkboxInput('skipEmptyCells',
+      #                   label = HTML(paste0("Skip empty cells from <b>", selectedCol(), "?</b>")))
+      #   }
+        
+      # })
+      
+      
     }
   )
 }

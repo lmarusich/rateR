@@ -7,9 +7,11 @@ dataImportUI <- function(id, label = "Import Method:") {
     radioButtons(
       ns("importOptions"),
       label = label,
-      choices = c("Upload file" = "upload",
-                  "Google Sheet" = "googlesheet"),
-      selected = character(0)
+      choices = c("Upload file" = "upload"
+                  # ,
+                  # "Google Sheet" = "googlesheet"
+                  ),
+      selected = "upload"
     ),
     conditionalPanel(
       condition = "input.importOptions == 'upload'",
