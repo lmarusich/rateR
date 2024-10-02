@@ -23,9 +23,9 @@ addColumns <- function(data, newcolName, ratedColumn, ratings, notes, ratingType
     }
   }
   if(any(!is.na(notes))){
-
-      newdata[[notecolName]][1:length(notes)] <- notes
-
+    
+    newdata[[notecolName]][1:length(notes)] <- notes
+    
   }
   
   return(newdata)
@@ -33,8 +33,22 @@ addColumns <- function(data, newcolName, ratedColumn, ratings, notes, ratingType
 
 myModal <- function(initialdf, colname, rownum, ratingName, existingRating = "", 
                     failed = FALSE, failMsg = "", existingNotes = "") {
-
+  
+  jscode2  <- '
+$(document).keyup(function(event) {
+  if ((event.keyCode == 13)) {
+    if (!$("#next_button").prop("disabled")) {
+        $("#next_button").click();
+    }
+      
+  }
+});
+'
+  
+  
+  
   modalDialog(
+    tags$script(HTML(jscode2)),
     title = paste0("Row ", rownum),
     sidebarLayout(
       sidebarPanel(
@@ -56,13 +70,13 @@ myModal <- function(initialdf, colname, rownum, ratingName, existingRating = "",
       )
     )
     ,
-
-      footer = tagList(
-        actionButton(("prev_button"), "Previous", disabled = ifelse(rownum == 1, T, F)),
-        actionButton(("next_button"), "Next", disabled = ifelse(rownum == dim(initialdf$df_data)[1], T, F)),
-        actionButton(("close_button"), "Save and Close"),
-        modalButton( "Cancel")
-      )
+    
+    footer = tagList(
+      actionButton(("prev_button"), "Previous", disabled = ifelse(rownum == 1, T, F)),
+      actionButton(("next_button"), "Next", disabled = ifelse(rownum == dim(initialdf$df_data)[1], T, F)),
+      actionButton(("close_button"), "Save and Close"),
+      modalButton( "Cancel")
+    )
     # }
   )
 }

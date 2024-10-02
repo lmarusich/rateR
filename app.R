@@ -15,6 +15,8 @@ jscode <- HTML("$('body').on('shown.bs.modal', (x) =>
                     $(x.target).find('input[type=\"text\"]#inputRating:first').focus().select());
 ")
 
+
+
 ui <- function(request){
   fluidPage(
     useShinyjs(),
