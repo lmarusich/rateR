@@ -1,0 +1,71 @@
+<h3>About this app</h3>
+<p>This Shiny app simplifies the labeling and rating process. Users can:
+<ul>
+  <li>Upload data files in .txt, .csv, or .xlsx format.</li>
+  <li>Filter the dataset to only the rows that need labels or ratings.</li>
+  <li>Specify constraints on the labels or ratings to be entered (e.g. only numbers within a certain range).</li>
+  <li>View each item and enter a label/rating one at a time in a separate window. Each rating is automatically saved in the appropriate row of the dataframe.</li>
+  <li>Add a note for each rating when needed.</li>
+  <li>Download a new data file with new columns for ratings and any notes.</li>
+</ul>
+</p>
+
+<!--<h4>Citing rmcorr and rmcorr-shiny</h4>
+<p>If you use this app, please cite:
+<ul>
+  <li>Bakdash, J.Z., & Marusich, L.R. (2017). Repeated Measures Correlation. <em></em>Frontiers in Psychology, 8</em>, 256. <a href = "https://doi.org/10.3389/fpsyg.2017.00456">doi: 10.3389/fpsyg.2017.00456</a></li>
+  <li> Marusich, L.R., & Bakdash, J.Z. (2021). rmcorrShiny: A web and standalone application for repeated measures correlation [version 1; peer review: 2 approved]. <em>F1000Research, 10</em>, 697. <a href = "https://doi.org/10.12688/f1000research.55027.1">https://doi.org/10.12688/f1000research.55027.1</a></li></ul></p>
+-->
+
+<h4>Credits</h4>
+
+ This app uses the following R packages:
+      <a href="https://cran.r-project.org/web/packages/shinyWidgets/index.html">shinyWidgets</a>,
+      <a href="https://cran.r-project.org/web/packages/tidyverse/index.html">tidyverse (dplyr, tidyr, purrr, and readxl)</a>,
+      <a href="https://cran.r-project.org/web/packages/shiny/index.html">shiny</a>, 
+      <a href="https://CRAN.R-project.org/package=shinyjs">shinyjs</a>,
+       <a href="https://CRAN.R-project.org/package=DT">DT</a>, and
+        <a href="https://CRAN.R-project.org/package=datamods">datamods</a>
+
+
+
+<!--<h4>Example Data: Publication Sources and Description</h4>
+<ul>
+<li> <a href="https://www.bmj.com/content/310/6977/446.short"> bland1995:</a>&nbsp Health science data with repeated measures, by participant, of pH (degree of base or acidity) and PaCO2 (partial pressure of carbon dioxide)</li>
+<li> <a href="https://doi.org/10.1037/a0016464"> gilden2010:</a>&nbsp Psychology data of reaction time and accuracy for a visual search task by participant, by repeated block (both dependent measures are averaged by block)</li>
+<li> <a href="https://journals.sagepub.com/doi/abs/10.1177/0018720815619515"> marusich2016:</a>&nbsp Psychology data of dyads working together to capture High Value Targets (lower task time is better performance) and their averaged Mission Awareness Rating Scale (MARS) for each block, repeated three times. MARS evaluates subjective situation awareness ("knowing what is going on"), higher values indicate better situation awareness</li>
+<li> <a href="https://doi.org/10.1093/cercor/bhi044"> raz2005:</a>&nbsp Neuroscience data containing the volume of a brain area (cerebellar hemisphere) measured twice per participant at two different ages, approximately 5 years apart</li>
+</ul>
+-->
+
+<h4>Source code for app</h4>
+<ul>
+<li><a href="https://github.com/lmarusich/rateR">Source code</a>&nbspfor this Shiny app</li>
+</ul>
+
+<!--<h4>Additional information about rmcorr</h4>
+<!--<ul>
+<!--  <li><a href="http://journal.frontiersin.org/article/10.3389/fpsyg.2017.00456/full">Bakdash and Marusich (2017): </a>&nbspJournal Article for rmcorr<li><a href="https://doi.org/10.3389/fpsyg.2019.01201">Bakdash and Marusich (2019):</a>&nbspCorrigendum to Journal Article (equations)</li>
+<!--  <li><a href="https://cran.r-project.org/web/packages/rmcorr/">rmcorr R package</a></li>
+<!--  <li><a href="https://www.bmj.com/content/310/6977/446.short">Bland and Altman (1995a)</a>&nbsp,
+      <a href ="https://www.bmj.com/content/310/6980/633.short">Bland and Altman (1995b):</a>&nbspRmcorr is based on these two papers</li>
+</ul>
+
+
+<h4>Alternative to rmcorr: Resources for multilevel modeling</h4>
+<p>Mulitlevel modeling is a more complicated alternative to rmcorr, but multilevel modeling has capabilities that rmcorr does not. Multilevel modeling permits varying slopes whereas rmcorr <i>always</i> fits a common or fixed slope across participants.  We recommend using multilevel modeling if: there are more than two variables of interest (in addition to participants or subjects), data with more than two levels, simultaneous modeling of within and between-participants is needed, visual patterns patterns suggest varying slopes by individual and/or non-linear associations, and time need to be explicitly included in the model (i.e., modeling change over time as a separate variable. See the <a href="http://journal.frontiersin.org/article/10.3389/fpsyg.2017.00456/full">Journal Article for rmcorr</a> and references below for more information.</p>
+<ul>
+  <li><a href="http://mfviz.com/hierarchical-models/">Website</a>&nbsp(Freeman). Intuitive visual explanation of multilevel modeling</li>
+  <li><a href="https://doi.org/10.1038/nn.3648">Journal Article</a>&nbsp(Aarts et al., 2014). Excellent overview on why repeated measures should be modeled and overview of multilevel modeling</li>
+  <li><a href="https://cogsci.mindmodeling.org/2018/papers/0009/0009.pdf">Conference paper</a>&nbsp(Singmann, 2018). Informative tutorial on multilevel modeling</li>
+  <li><a href="https://books.google.com/books?hl=en&lr=&id=c9xLKzZWoZ4C">Book</a>&nbsp(Gelman and Hill, 2006). Comprehensive book on multilevel modeling with detailed explanations, equations, and examples using real data</li>
+  </ul>
+-->
+<h4>Contact</h4>
+  <ul>
+    <li>
+      <a href="mailto:laura.m.cooper20.civ@army.mil">Laura Marusich</a>
+    </li>
+
+  </ul>
+
