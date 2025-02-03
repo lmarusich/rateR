@@ -3,26 +3,32 @@ ratingOptionsUI <- function(id, label = "Rating Options") {
   ns <- NS(id)
   
   tagList(
-    uiOutput(ns('generatedUI1')),
     
-    # uiOutput(ns('generatedUI2')),
-
-    conditionalPanel(condition = 'input.selectedColumn',
-                     textInput('ratingName',
-                               label = 'Name the new column of labels/ratings:',
-                               value = "",
-                               placeholder = "new column name"),
-                     ns = NS(id)
+    uiOutput(ns('raterIDUI')),
+    
+    conditionalPanel(
+      condition = 'input.raterID',
+      uiOutput(ns('selectColumnUI'))
+    ),
+    
+    conditionalPanel(
+      condition = 'input.selectedColumn',
+      # checkboxInput('randomizeOrder',
+      #               label = "Randomize order when rating?"),
+      uiOutput(ns('nameColumnUI')),
+      ns = NS(id)
+      
     ),
     
     conditionalPanel(condition = 'input.ratingName',
-                     selectInput('ratingType',
-                                 label = 'Type of ratings:',
-                                 choices = c("","labels","numbers"),
-                                 selected = NULL,
-                                 multiple = FALSE),
-                     checkboxInput('specifyRatings',
-                                   label = "Specify what rating values will be allowed?")
+                    uiOutput(ns('columnTypeUI'))
+                     # selectInput('ratingType',
+                     #             label = 'Type of ratings:',
+                     #             choices = c("","labels","numbers"),
+                     #             selected = NULL,
+                     #             multiple = FALSE),
+                     # checkboxInput('specifyRatings',
+                     #               label = "Specify what rating values will be allowed?")
     ),
     conditionalPanel(condition = 'input.ratingType == "labels" & input.specifyRatings',
                      textAreaInput('ratingLabels',

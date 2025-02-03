@@ -1,4 +1,4 @@
-ratingOptions <- function(id, data){
+ratingOptions <- function(id, data, confirmReset){
   moduleServer(
     id,
     
@@ -9,7 +9,8 @@ ratingOptions <- function(id, data){
       
       # The selected file, if any
       selectedCol <- reactive({
-      req(input$selectedColumn)
+        req(input$selectedColumn)
+        
         if (!is.null(input$selectedColumn)){
           return(input$selectedColumn)
         } else {
@@ -18,13 +19,72 @@ ratingOptions <- function(id, data){
       })
       
       
-      output$generatedUI1 <- renderUI({
+      output$raterIDUI <- renderUI({
+        textInput('raterID',
+                  label = "Rater name/ID:",
+                  value = "",
+                  placeholder = "Rater name/ID")
+      })
+      
+      output$selectColumnUI <- renderUI({
         selectInput(ns('selectedColumn'),
                     label = 'Select the column containing items to be labeled/rated:',
                     choices = c("",data$columns()),
                     selected = NULL,
                     multiple = FALSE)
+      })
+      
+      output$nameColumnUI <- renderUI({
+        textInput('ratingName',
+                  label = 'Name the new column of labels/ratings:',
+                  value = "",
+                  placeholder = "new column name")
+      })
+      
+      output$columnTypeUI <- renderUI({
+        tagList(
+          selectInput('ratingType',
+                      label = 'Type of ratings:',
+                      choices = c("","labels","numbers"),
+                      selected = NULL,
+                      multiple = FALSE),
+          checkboxInput('specifyRatings',
+                        label = "Specify what rating values will be allowed?")
+        )
+      })
+      
+      observeEvent(confirmReset(), {
+        output$raterIDUI <- renderUI({
+          textInput('raterID',
+                    label = "Rater name/ID:",
+                    value = "",
+                    placeholder = "Rater name/ID")
+        })
+        output$selectColumnUI <- renderUI({
+          selectInput(ns('selectedColumn'),
+                      label = 'Select the column containing items to be labeled/rated:',
+                      choices = c("",data$columns()),
+                      selected = NULL,
+                      multiple = FALSE)
+        })
+        output$nameColumnUI <- renderUI({
+          textInput('ratingName',
+                    label = 'Name the new column of labels/ratings:',
+                    value = "",
+                    placeholder = "new column name")
+        })
         
+        output$columnTypeUI <- renderUI({
+          tagList(
+            selectInput('ratingType',
+                        label = 'Type of ratings:',
+                        choices = c("","labels","numbers"),
+                        selected = NULL,
+                        multiple = FALSE),
+            checkboxInput('specifyRatings',
+                          label = "Specify what rating values will be allowed?")
+          )
+        })
         
       })
       
@@ -35,11 +95,13 @@ ratingOptions <- function(id, data){
       #     checkboxInput('skipEmptyCells',
       #                   label = HTML(paste0("Skip empty cells from <b>", selectedCol(), "?</b>")))
       #   }
-        
+      
       # })
       
       
     }
   )
 }
-
+  
+  
+  

@@ -1,20 +1,49 @@
 library(dplyr)
 
-addColumns <- function(data, newcolName, ratedColumn, ratings, notes, ratingType){
+# orderData <- function(isRandom, data){
+#   if(isRandom){
+#     nLines <- dim(data)[1]
+#     return(sample(1:nLines, size = nLines, replace = F))
+#   } else {
+#     return(NULL)
+#   }
+# }
+
+addColumns <- function(data, newcolName, ratedColumn, ratings, notes, ratingType, raterID){
+                       # , randOrder, newOrder, seed){
   
   ratings <- map(ratings, ~ifelse(is.null(.x), NA, .x)) %>%
     unlist()
   notes <- map(notes, ~ifelse(is.null(.x), NA, .x)) %>%
     unlist()
   
+  newcolName <- paste0(raterID, "_", newcolName)
+  
   notecolName <- paste0(newcolName, "_notes")
   
   nLines <- dim(data)[1]
+  # neworder <- 1:nLines
+  
+  # set.seed(seed)
+  # isolate({
+  # if(randOrder){
+  #   # browser()
+  #   # neworder <- newOrder
+  #   # neworder <- nLines:1
+  #   # (neworder <- isolate(sample(1:nLines, size = nLines, replace = F)))
+  # } else {
+  #   # neworder <- 1:nLines
+  # }
+  # })
+  
   newdata <- data %>% 
     # mutate(rowNum = row_number(), .before = 1) %>%
     mutate(!!newcolName := NA,
            !!notecolName := "",
+           # ratingOrder = neworder,
            .after = ratedColumn)
+  # %>%
+    # arrange(neworder)
   if(any(!is.na(ratings))){
     if (ratingType == "numbers"){
       newdata[[newcolName]][1:length(ratings)] <- as.numeric(ratings)

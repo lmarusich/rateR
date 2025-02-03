@@ -17,16 +17,7 @@ dataImportUI <- function(id, label = "Import Method:") {
       condition = "input.importOptions == 'upload'",
       ns=ns,
       p("Upload a .txt, .csv, or .xlsx file with one item per row."),
-      fileInput(ns("textFile"),
-                label = "File Input",
-                multiple = FALSE,
-                accept = c("text/csv",
-                           "text/comma-separated-values,text/plain",
-                           ".csv",
-                           ".xls",
-                           ".xlsx"),
-                buttonLabel = "Browse...", #Unnecessary line, it's the default
-                placeholder = "No file selected")
+      uiOutput(ns('file1_ui')), ## instead of fileInput('file1', label = NULL),
     ),
     uiOutput(ns("sheets")),
     conditionalPanel(
@@ -38,7 +29,7 @@ dataImportUI <- function(id, label = "Import Method:") {
     p("If the preview doesn't appear correctly on the right, edit the options below."),
     
       checkboxInput(ns("header"), "Header", TRUE),
-      checkboxInput(ns("excludeEmptyCols"), "Exclude empty columns?", TRUE),
+      # checkboxInput(ns("excludeEmptyCols"), "Exclude empty columns?", TRUE),
     tags$details(
     tags$summary("More options", style = "display:revert;"),
       radioButtons(ns("sep"), "Column Delimiter",

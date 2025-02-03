@@ -5,9 +5,8 @@ account: lmarusich
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6250071
-bundleId: 5895649
+bundleId: 9737990
 url: https://lmarusich.shinyapps.io/rateR/
-when: 1652282975.30214
-lastSyncTime: 1652282975.30214
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: session_20240308-11_15.json.xlsx|session_20240308-11_15.json.xlsx-rated.csv|session_20240308-11_15.json.xlsx-rated2.csv|test_session_cig_240308_1115am_3p_c2.json.xlsx-rated.csv
