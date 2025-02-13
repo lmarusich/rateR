@@ -160,11 +160,13 @@ server <- function(input, output, session) {
   
   
   initialdf <- reactiveValues(df_data = NULL)
-  # newOrder <- NULL
+  randOrder <- reactiveValues(order = NULL)
   filtereddf <- reactiveValues(df_data = NULL)
   # ,
   # order = NULL)
-  ratings <- reactiveValues(ratings = list(),
+  ratings <- reactiveValues(
+    ratedRowNum = list(),
+    ratings = list(),
                             notes = list())
   
   ###################################################################
@@ -190,31 +192,19 @@ server <- function(input, output, session) {
     enable('import_done')
     enable('filterBool')
     enable('filter_done')
-    filtereddf$df_data <- inputData$inputData()
+    if(input$filterBool){
+      filtereddf$df_data <-  res_filter$filtered()
+      randOrder$order <- isolate(sample(1:(dim(filtereddf$df_data)[1]), size = dim(filtereddf$df_data)[1], replace = F))
+      # browser()
+    }else{
+      filtereddf$df_data <- inputData$inputData()
+      randOrder$order <- isolate(sample(1:(dim(filtereddf$df_data)[1]), size = dim(filtereddf$df_data)[1], replace = F))
+      # browser()
+    }
+    
     ratingOptions(id = "options_ui", data = inputData, confirmReset = click)
   })
   
-  observeEvent(input$filterBool, {
-    # req(input$filterBool)
-    filtereddf$df_data <- inputData$inputData()
-    if (input$filterBool){
-      filtereddf$df_data <-  res_filter$filtered()
-    }else{
-      # filtereddf$df_data <-  inputData$inputData()
-    }
-    
-  },
-  ignoreInit = T
-  )
-
-
-# newOrder <- eventReactive(
-#   input$randomizeOrder, {
-#    orderData(input$randomizeOrder, filtereddf$df_data)
-#   
-#   }
-# )
-
 output$filteringCols <- renderUI({
   selectInput(
     "filteringCols",
@@ -238,16 +228,21 @@ res_filter <- filter_data_server(
   
 )
 
-output$filteredpreview <- 
+filtered_preview_df <- reactive({
+  # browser()
+  if ((input$filterBool)){
+    # browser()
+    return(res_filter$filtered())
+  }else{
+    # browser()
+    return(filtereddf$df_data)
+  }
+  # browser()
+})
+output$filteredpreview <- DT::renderDataTable(filtered_preview_df(),
+                                              rownames = F,
+                                              selection = "none")
 
-    DT::renderDataTable(
-      
-      filtereddf$df_data,
-      rownames = F,
-      selection = 'none'
-    )
-
-  
 
 
 ###################################################################
@@ -261,16 +256,14 @@ ratingSpecs <- reactive({
   return(list(
     selectedColumn = (input$`options_ui-selectedColumn`),
     # randOrder = input$randomizeOrder,
-    ratingName = (input$ratingName),
-    ratingType = (input$ratingType),
+    ratingName = paste0(input$raterID, "_", input$ratingName),
+    ratingType = (input$ratingType), 
     specified = input$specifyRatings,
     minNumRating = (input$minNumRating),
     maxNumRating = (input$maxNumRating),
     ratingLabels = unlist(strsplit(input$ratingLabels, split = "\n"))
   ))
 })
-
-#put randomization outside here maybe?
 
 #call rating modal module
 observeEvent(input$mainDT_rows_selected,{
@@ -304,6 +297,7 @@ observeEvent(ignoreInit = T, event_trigger(), {
                           ratingSpecs()$ratingName, 
                           existingRating = input$inputRating,
                           existingNotes = input$inputNotes,
+                          # randOrder = input$randomizeOrder,
                           failed = TRUE, 
                           failMsg = paste0("Please enter one of the following labels: ",
                                            paste(ratingSpecs()$ratingLabels, collapse = ', '))))
@@ -318,6 +312,8 @@ observeEvent(ignoreInit = T, event_trigger(), {
                           ratingSpecs()$ratingName, 
                           existingRating = input$inputRating,
                           existingNotes = input$inputNotes,
+                          # randOrder = input$randomizeOrder,
+                          # randOrder$order
                           failed = TRUE, 
                           failMsg = paste0("Please enter a label: ",
                                            paste(ratingSpecs()$ratingLabels, collapse = ', '))))
@@ -360,6 +356,8 @@ observeEvent(ignoreInit = T, event_trigger(), {
     ratings$ratings[[input$mainDT_rows_selected]] <- input$inputRating
     #save the notes
     ratings$notes[[input$mainDT_rows_selected]] <- input$inputNotes
+    #save the original row number
+    ratings$ratedRowNum[[input$mainDT_rows_selected]] <- filtereddf$df_data$rowNum[input$mainDT_rows_selected]
     
     #if they hit the previous button, select the previous row
     if (input$prev_button){
@@ -446,6 +444,7 @@ main_preview_table <- reactive({
 #generate preview table of filtered data
 filtered_preview_table <- reactive({
   req(inputData$name())
+  # browser()
   DT::datatable(
     filtereddf$df_data,
     rownames = F,
@@ -473,19 +472,24 @@ observe({
   # input$randomizeOrder
   input$ratingType
   input$ratingName
+  input$randomizeOrder
   req(input$`options_ui-selectedColumn`)
   req(input$ratingType)
   req(input$ratingName)
   # browser()
   enable("options_done")
   enable("bookmarkBtn")
+  # browser()
   temp <- (addColumns(filtereddf$df_data,
                       input$ratingName,
                       input$`options_ui-selectedColumn`,
                       ratings$ratings,
                       ratings$notes,
+                      ratings$ratedRowNum,
                       input$ratingType,
-                      input$raterID
+                      input$raterID,
+                      input$randomizeOrder,
+                      randOrder$order
                       # ,
                       # input$randomizeOrder,
                       # newOrder(),
@@ -493,6 +497,14 @@ observe({
                       # seed = 45
   ))
   filtereddf$df_data <- temp
+})
+
+observeEvent(ratings$ratings, {
+  # browser()
+  if (length(ratings$ratings) > 0){
+    # browser()
+    shinyjs::disable("randomizeOrder")
+  }
 })
 
 # #if user selects a column and chooses a type of rating, enable "next" button

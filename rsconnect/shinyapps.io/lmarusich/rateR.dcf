@@ -5,7 +5,7 @@ account: lmarusich
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6250071
-bundleId: 9737990
+bundleId: 9765825
 url: https://lmarusich.shinyapps.io/rateR/
 asMultiple: FALSE
 asStatic: FALSE

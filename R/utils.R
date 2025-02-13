@@ -9,19 +9,57 @@ library(dplyr)
 #   }
 # }
 
-addColumns <- function(data, newcolName, ratedColumn, ratings, notes, ratingType, raterID){
+addColumns <- function(data, 
+                       newcolName, 
+                       ratedColumn, 
+                       ratings, 
+                       notes, 
+                       ratedRows,
+                       ratingType, 
+                       raterID,
+                       randOrder,
+                       newOrder){
                        # , randOrder, newOrder, seed){
   
   ratings <- map(ratings, ~ifelse(is.null(.x), NA, .x)) %>%
     unlist()
   notes <- map(notes, ~ifelse(is.null(.x), NA, .x)) %>%
     unlist()
+  ratedRows <- map(ratedRows, ~ifelse(is.null(.x), NA, .x)) %>%
+    unlist()
+  
+  # browser()
   
   newcolName <- paste0(raterID, "_", newcolName)
   
   notecolName <- paste0(newcolName, "_notes")
   
   nLines <- dim(data)[1]
+  # if(!(randOrder)){
+  #   newOrder <- 1:nLines
+  # }
+  # browser()
+  #if the order is not randomized, check if it's been previously randomized
+  if (!(randOrder)){
+    # if (all(data$rowNum == 1:nLines)) #if not, order stays in row number order
+    if (!(is.unsorted(data$rowNum)))
+    {
+      newOrder <- data$rowNum
+      # browser()
+    } else { #if yes, reorder things back to row number order
+      newOrder <- data$rowNum
+      # browser()
+    }
+  } else if (randOrder){ #if the order is randomized, check if it's already been done
+    # if (all(data$rowNum == 1:nLines)){ #if not, use newOrder to rearrange
+    if (!(is.unsorted(data$rowNum))){
+      #newOrder stays as newOrder
+      # browser()
+    } else{ #if so, keep it the way it is
+      newOrder <- data$ratingOrder
+    }
+  }
+  
   # neworder <- 1:nLines
   
   # set.seed(seed)
@@ -35,15 +73,19 @@ addColumns <- function(data, newcolName, ratedColumn, ratings, notes, ratingType
   #   # neworder <- 1:nLines
   # }
   # })
-  
+  # browser()
   newdata <- data %>% 
     # mutate(rowNum = row_number(), .before = 1) %>%
     mutate(!!newcolName := NA,
            !!notecolName := "",
-           # ratingOrder = neworder,
+           ratingOrder = newOrder,
            .after = ratedColumn)
-  # %>%
-    # arrange(neworder)
+  
+  newdata <- isolate(newdata %>%
+    arrange(ratingOrder))
+  
+    # %>%
+    # arrange(ratingOrder))
   if(any(!is.na(ratings))){
     if (ratingType == "numbers"){
       newdata[[newcolName]][1:length(ratings)] <- as.numeric(ratings)
@@ -56,7 +98,7 @@ addColumns <- function(data, newcolName, ratedColumn, ratings, notes, ratingType
     newdata[[notecolName]][1:length(notes)] <- notes
     
   }
-  
+  # browser()
   return(newdata)
 }
 
@@ -74,7 +116,7 @@ $(document).keyup(function(event) {
 });
 '
   
-  
+  # browser()
   
   modalDialog(
     tags$script(HTML(jscode2)),

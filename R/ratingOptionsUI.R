@@ -13,8 +13,8 @@ ratingOptionsUI <- function(id, label = "Rating Options") {
     
     conditionalPanel(
       condition = 'input.selectedColumn',
-      # checkboxInput('randomizeOrder',
-      #               label = "Randomize order when rating?"),
+      checkboxInput('randomizeOrder',
+                    label = "Randomize order when rating?"),
       uiOutput(ns('nameColumnUI')),
       ns = NS(id)
       
