@@ -28,17 +28,14 @@ addColumns <- function(data,
   ratedRows <- map(ratedRows, ~ifelse(is.null(.x), NA, .x)) %>%
     unlist()
   
-  # browser()
-  
   newcolName <- paste0(raterID, "_", newcolName)
   
   notecolName <- paste0(newcolName, "_notes")
   
+  ordercolName <- paste0(newcolName, "_rating_order")
+  
   nLines <- dim(data)[1]
-  # if(!(randOrder)){
-  #   newOrder <- 1:nLines
-  # }
-  # browser()
+
   #if the order is not randomized, check if it's been previously randomized
   if (!(randOrder)){
     # if (all(data$rowNum == 1:nLines)) #if not, order stays in row number order
@@ -56,36 +53,21 @@ addColumns <- function(data,
       #newOrder stays as newOrder
       # browser()
     } else{ #if so, keep it the way it is
-      newOrder <- data$ratingOrder
+      newOrder <- data[[ordercolName]]
     }
   }
   
-  # neworder <- 1:nLines
-  
-  # set.seed(seed)
-  # isolate({
-  # if(randOrder){
-  #   # browser()
-  #   # neworder <- newOrder
-  #   # neworder <- nLines:1
-  #   # (neworder <- isolate(sample(1:nLines, size = nLines, replace = F)))
-  # } else {
-  #   # neworder <- 1:nLines
-  # }
-  # })
-  # browser()
+
   newdata <- data %>% 
     # mutate(rowNum = row_number(), .before = 1) %>%
     mutate(!!newcolName := NA,
            !!notecolName := "",
-           ratingOrder = newOrder,
+           !!ordercolName := newOrder,
            .after = ratedColumn)
-  
+ 
   newdata <- isolate(newdata %>%
-    arrange(ratingOrder))
-  
-    # %>%
-    # arrange(ratingOrder))
+    arrange(get(ordercolName)))
+
   if(any(!is.na(ratings))){
     if (ratingType == "numbers"){
       newdata[[newcolName]][1:length(ratings)] <- as.numeric(ratings)
