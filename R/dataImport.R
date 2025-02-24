@@ -13,20 +13,20 @@ dataImport <- function(id, confirmReset){
       output$file1_ui <- renderUI({
         # input$confirmReset
         fileInput(ns("textFile"),
-                label = "File Input",
-                multiple = FALSE,
-                accept = c("text/csv",
-                           "text/comma-separated-values,text/plain",
-                           ".csv",
-                           ".xls",
-                           ".xlsx"),
-                buttonLabel = "Browse...", #Unnecessary line, it's the default
-                placeholder = "No file selected")
-  
+                  label = "File Input",
+                  multiple = FALSE,
+                  accept = c("text/csv",
+                             "text/comma-separated-values,text/plain",
+                             ".csv",
+                             ".xls",
+                             ".xlsx"),
+                  buttonLabel = "Browse...", #Unnecessary line, it's the default
+                  placeholder = "No file selected")
+        
       })
       # browser()
       observeEvent(confirmReset(), {
-
+        
         output$file1_ui <- renderUI({
           fileInput(ns("textFile"),
                     label = "File Input",
@@ -98,7 +98,8 @@ dataImport <- function(id, confirmReset){
           # req(selected_sheet())
           filedat <- read_xlsx(
             userFile()$datapath,
-            sheet = selected_sheet()
+            sheet = selected_sheet(),
+            col_names = input$header
           )
           # browser()
           
@@ -112,7 +113,7 @@ dataImport <- function(id, confirmReset){
             check.names = TRUE,
             dec = input$decimalPoint
           )
-
+          
         }
         
         #NOTE, this needs to change probably. do the exclusion in the displaying of the data instead
@@ -142,7 +143,7 @@ dataImport <- function(id, confirmReset){
         file_path_sans_ext(userFile()$name)
       })
       
-
+      
       return(list(
         inputData = inputData,
         columns = columns,
