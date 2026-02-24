@@ -1,10 +1,12 @@
 Package: rateR
-Title: What the Package Does (One Line, Title Case)
+Title: A Shiny Application to Reduce Errors and Simplify Human Coding/Rating Tasks
 Version: 0.0.0.9000
 Authors@R: 
     person("Laura R.", "Marusich", , "laura.m.cooper20.civ@army.mil", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-3524-6110"))
-Description: What the package does (one paragraph).
+Description: This Shiny app is a tool for human coding and rating tasks. It is designed
+  to simplify the process of coding for multiple independent human judges, making the 
+  workflow less burdensome while also reducing errors and improving consistency and reliability.
 License: MIT + file LICENSE
 Imports: 
     shiny

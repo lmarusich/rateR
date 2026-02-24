@@ -2,12 +2,12 @@
 % Please edit documentation in R/rateR.R
 \name{rateR}
 \alias{rateR}
-\title{A shiny application for}
+\title{A shiny application for human coding and rating tasks.}
 \usage{
 rateR()
 }
 \description{
-rateR provides an intuitive interface with options to
+rateR provides an intuitive interface with options to import and filter data, choose variables to code/rate, set constraints on the rating options, and save the rated data to a new file.
 }
 \examples{
 if (interactive()) {
